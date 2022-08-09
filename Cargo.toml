@@ -1,0 +1,17 @@
+[package]
+name = "hateoas"
+version = "0.1.0"
+edition = "2021"
+authors = ["Anders Blenstrup-Pedersen <abp-git@ryuu.technology>"]
+description = "HATEOAS implementation for handling structured responses/request"
+readme = "README.md"
+categories = ["HATEOAS", "Response", "Request"]
+license = "MIT"
+repository = "https://github.com/nebula-technologies/hateoas"
+
+
+[dependencies]
+railsgun = "2.0.0"
+serde = "1.0.143"
+serde_derive = "1.0.143"
+uuid = {version = "1.1.2", features = ["serde", "v4"]}
