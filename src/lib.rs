@@ -15,6 +15,7 @@ pub use content::Content;
 pub use metadata::Metadata;
 pub use rel_link::{HttpMethod, RelLink};
 pub use rel_link_collection::RelLinkCollection;
+pub use resource_trait::HateoasResource;
 pub use status::Status;
 
 #[cfg(test)]
