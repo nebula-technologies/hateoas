@@ -1,4 +1,3 @@
-
 use crate::RelLink;
 
 /// # RelLinkCollection
@@ -9,14 +8,14 @@ use crate::RelLink;
 /// use hateoas::{HttpMethod, RelLink, RelLinkCollection};
 ///
 /// let rel_vec = vec![
-///     RelLink::new("foo", "foo", HttpMethod::Get),
-///     RelLink::new("bar", "bar", HttpMethod::Get)
+///     RelLink::new( "foo","foo", HttpMethod::Get),
+///     RelLink::new( "bar","bar", HttpMethod::Get)
 /// ];
 /// let rlc_check = RelLinkCollection::new(rel_vec);
 ///
 /// let mut rlc = RelLinkCollection::default();
-/// rlc.add("foo", RelLink::new("foo", "foo", HttpMethod::Get));
-/// rlc.add("bar", RelLink::new("bar", "bar", HttpMethod::Get));
+/// rlc.add("foo", RelLink::new( "foo","foo", HttpMethod::Get));
+/// rlc.add("bar", RelLink::new( "bar","bar", HttpMethod::Get));
 /// ```
 ///
 /// ## Adding new data but data is overwritten
@@ -24,12 +23,12 @@ use crate::RelLink;
 /// use hateoas::{HttpMethod, RelLink, RelLinkCollection};
 ///
 /// let rel_vec = vec![
-///     RelLink::new("foo", "foo", HttpMethod::Get),
-///     RelLink::new("bar", "bar", HttpMethod::Get)
+///     RelLink::new( "foo","foo", HttpMethod::Get),
+///     RelLink::new( "bar","bar", HttpMethod::Get)
 /// ];
 /// let mut rlc = RelLinkCollection::new(rel_vec);
 ///
-/// let old_rel = rlc.add("foo", RelLink::new("foo-bar", "foo", HttpMethod::Get));
+/// let old_rel = rlc.add("foo", RelLink::new( "foo","foo-bar", HttpMethod::Get));
 ///
 /// assert_eq!(old_rel, Some(("foo", "foo", HttpMethod::Get).into()));
 /// ```
@@ -39,8 +38,8 @@ use crate::RelLink;
 /// use hateoas::{HttpMethod, RelLink, RelLinkCollection};
 ///
 /// let rel_vec = vec![
-///     RelLink::new("foo", "foo", HttpMethod::Get),
-///     RelLink::new("bar", "bar", HttpMethod::Get)
+///     RelLink::new( "foo","foo", HttpMethod::Get),
+///     RelLink::new( "bar","bar", HttpMethod::Get)
 /// ];
 /// let mut rlc = RelLinkCollection::new(rel_vec);
 ///
@@ -54,8 +53,8 @@ use crate::RelLink;
 /// use hateoas::{HttpMethod, RelLink, RelLinkCollection};
 ///
 /// let rel_vec = vec![
-///     RelLink::new("foo", "foo", HttpMethod::Get),
-///     RelLink::new("bar", "bar", HttpMethod::Get)
+///     RelLink::new( "foo","foo", HttpMethod::Get),
+///     RelLink::new( "bar","bar", HttpMethod::Get)
 /// ];
 /// let mut rlc = RelLinkCollection::new(rel_vec);
 ///
@@ -74,6 +73,15 @@ use crate::RelLink;
 pub struct RelLinkCollection(Vec<RelLink>);
 
 impl RelLinkCollection {
+    /// ## Create Collection
+    /// Create new Collection with complete Vec, this allows to set all the elements for the collection in one go using a Vec.
+    /// ```
+    /// use hateoas::RelLinkCollection;
+    ///
+    /// let collection = RelLinkCollection(vec![]);
+    ///
+    /// assert_eq!(collection.into(), vec![]);
+    /// ```
     pub fn new(v_rel: Vec<RelLink>) -> Self {
         RelLinkCollection(v_rel)
     }
@@ -101,6 +109,12 @@ impl RelLinkCollection {
             self.0.push(new_link)
         }
         old_link
+    }
+}
+
+impl From<RelLinkCollection> for Vec<RelLink> {
+    fn from(col: RelLinkCollection) -> Self {
+        col.0
     }
 }
 

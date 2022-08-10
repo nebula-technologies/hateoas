@@ -104,14 +104,33 @@ impl<T: Serialize> Default for Content<T> {
     }
 }
 
+/// Dereferencing the Internal [T] from the Content object
+/// This allows us to better operate on the content itself and use it without having to extract it.
+/// ```
+/// use std::ops::Deref;
+/// use hateoas::Content;
+/// let content: Content<()> = Content::default();
+/// let content_opt: &Option<()> = content.deref();
+///
+/// assert_eq!(content_opt, &None);
+/// ```
 impl<T> Deref for Content<T> {
     type Target = Option<T>;
-
     fn deref(&self) -> &Self::Target {
         &self.content
     }
 }
 
+/// Dereferencing the Internal [T] from the Content object
+/// This allows us to better operate on the content itself and use it without having to extract it.
+/// ```
+/// use std::ops::{Deref, DerefMut};
+/// use hateoas::Content;
+/// let mut content: Content<()> = Content::default();
+/// let content_opt: &Option<()> = content.deref_mut();
+///
+/// assert_eq!(content_opt, &mut None);
+/// ```
 impl<T> DerefMut for Content<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.content

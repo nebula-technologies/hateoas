@@ -1,9 +1,17 @@
+use crate::HateoasResponse;
+use serde::Serialize;
 use std::collections::HashMap;
 
 pub trait HateoasResource {
+    /// The constant that defines what type of resources is being send.
     const KIND: &'static str;
+    /// The version of the schema used for the expected resource
     const VERSION: &'static str;
+    /// What group this resource belongs under. This is usually same as the app domain or package domain.
     const GROUP: &'static str;
+    /// This is the current groups/resource url endpoint, this allows for different endpoints for each type/group/version.
+    /// an endpoint could be generated as follows:
+    /// /[Group]/[Version]/[URL_PATH_SEGMENT]
     const URL_PATH_SEGMENT: &'static str;
 }
 
@@ -40,4 +48,15 @@ impl HateoasResource for HashMap<String, String> {
     const VERSION: &'static str = "0.0.1-beta.1";
     const GROUP: &'static str = "defaults";
     const URL_PATH_SEGMENT: &'static str = "hashmap";
+}
+
+pub trait ToHateoasResponse<T> {
+    fn to_hateoas_response(self) -> T;
+}
+
+pub trait AsHateoasResponse<T>
+where
+    T: Serialize + HateoasResource,
+{
+    fn as_response(&mut self) -> &mut HateoasResponse<T>;
 }
