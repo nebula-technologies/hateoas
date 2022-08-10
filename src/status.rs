@@ -29,7 +29,7 @@ impl Status {
     ///
     /// let mut status = Status::new(Some("hello world"), None, None, None);
     ///
-    /// assert_eq!(status.get_message(), &Some("hello world".to_string()));
+    /// assert_eq!(status.message(), &Some("hello world".to_string()));
     /// ```
     pub fn message(&self) -> &Option<String> {
         &self.message
@@ -42,11 +42,11 @@ impl Status {
     /// use hateoas::Status;
     ///
     /// let mut status = Status::new(Some("hello world"), None, None, None);
-    /// let mut mut_message = status.get_message_mut();
     ///
+    /// let mut mut_message = status.message_mut();
     /// *mut_message = Some("Hello Space".to_string());
     ///
-    /// assert_eq!(status.get_message(), &Some("Hello Space".to_string()));
+    /// assert_eq!(status.message(), &Some("Hello Space".to_string()));
     /// ```
     pub fn message_mut(&mut self) -> &mut Option<String> {
         &mut self.message
@@ -58,10 +58,9 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::default();
-    /// status.code(&100);
+    /// let mut status = Status::new(None, Some(200), None, None);
     ///
-    /// assert_eq!(status.get_code(), &Some(100));
+    /// assert_eq!(status.code(), &Some(200));
     /// ```
     pub fn code(&self) -> &Option<u32> {
         &self.code
@@ -74,12 +73,12 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::default();
+    /// let mut status = Status::new(None, Some(200), None, None);
     ///
-    /// let mut status_code = status.get_code_mut();
-    /// *status_code = Some(200);
+    /// let mut status_code = status.code_mut();
+    /// *status_code = Some(100);
     ///
-    /// assert_eq!(status.get_code(), &Some(200));
+    /// assert_eq!(status.code(), &Some(100));
     /// ```
     pub fn code_mut(&mut self) -> &mut Option<u32> {
         &mut self.code
@@ -91,10 +90,9 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::default();
-    /// status.http_status_code(&200);
+    /// let mut status = Status::new(None, None, Some(200), None);
     ///
-    /// assert_eq!(status.get_http_status_code(), &Some(200));
+    /// assert_eq!(status.http_status_code(), &Some(200));
     /// ```
     pub fn http_status_code(&self) -> &Option<u16> {
         &self.http_status_code
@@ -106,12 +104,14 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::default();
-    /// status.http_status_code(&200);
+    /// let mut status = Status::new(None, None, Some(200), None);
     ///
-    /// assert_eq!(status.get_http_status_code(), &Some(200));
+    /// let mut http_code = status.http_status_code_mut();
+    /// *http_code = Some(100);
+    ///
+    /// assert_eq!(status.http_status_code(), &Some(100));
     /// ```
-    pub fn http_status_code_mut(&mut self) -> &Option<u16> {
+    pub fn http_status_code_mut(&mut self) -> &mut Option<u16> {
         &mut self.http_status_code
     }
 
@@ -120,11 +120,10 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::default();
     /// let uuid = uuid::Uuid::new_v4();
-    /// status.session(&uuid);
+    /// let mut status = Status::new(None, None, None, Some(uuid));
     ///
-    /// assert_eq!(status.get_session(), &Some(uuid));
+    /// assert_eq!(status.session(), &Some(uuid));
     /// ```
     pub fn session(&self) -> &Option<uuid::Uuid> {
         &self.session
@@ -135,14 +134,14 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::default();
     /// let uuid = uuid::Uuid::new_v4();
     /// let uuid_2 = uuid::Uuid::new_v4();
-    /// status.session(&uuid);
-    /// let mut mut_session = status.get_session_mut();
+    /// let mut status = Status::default();
+    ///
+    /// let mut mut_session = status.session_mut();
     /// *mut_session = Some(uuid_2);
     ///
-    /// assert_eq!(status.get_session(), &Some(uuid_2));
+    /// assert_eq!(status.session(), &Some(uuid_2));
     /// ```
     pub fn session_mut(&mut self) -> &mut Option<uuid::Uuid> {
         &mut self.session

@@ -14,8 +14,8 @@ use crate::RelLink;
 /// let rlc_check = RelLinkCollection::new(rel_vec);
 ///
 /// let mut rlc = RelLinkCollection::default();
-/// rlc.add("foo", RelLink::new( "foo","foo", HttpMethod::Get));
-/// rlc.add("bar", RelLink::new( "bar","bar", HttpMethod::Get));
+/// rlc.add(RelLink::new( "foo","foo", HttpMethod::Get));
+/// rlc.add(RelLink::new( "bar","bar", HttpMethod::Get));
 /// ```
 ///
 /// ## Adding new data but data is overwritten
@@ -28,7 +28,7 @@ use crate::RelLink;
 /// ];
 /// let mut rlc = RelLinkCollection::new(rel_vec);
 ///
-/// let old_rel = rlc.add("foo", RelLink::new( "foo","foo-bar", HttpMethod::Get));
+/// let old_rel = rlc.add(RelLink::new( "foo","foo-bar", HttpMethod::Get));
 ///
 /// assert_eq!(old_rel, Some(("foo", "foo", HttpMethod::Get).into()));
 /// ```
@@ -76,33 +76,78 @@ impl RelLinkCollection {
     /// ## Create Collection
     /// Create new Collection with complete Vec, this allows to set all the elements for the collection in one go using a Vec.
     /// ```
-    /// use hateoas::RelLinkCollection;
+    /// use hateoas::{RelLink, RelLinkCollection};
     ///
-    /// let collection = RelLinkCollection(vec![]);
+    /// let collection = RelLinkCollection::new(vec![]);
+    /// let vec_col: Vec<RelLink> = collection.into();
     ///
-    /// assert_eq!(collection.into(), vec![]);
+    /// assert_eq!(vec_col, vec![]);
     /// ```
     pub fn new(v_rel: Vec<RelLink>) -> Self {
         RelLinkCollection(v_rel)
     }
 
+    /// ## Get RelLink from Collection
+    /// Getting a RelLink from the collection by rel id.
+    ///
+    /// ```
+    /// use hateoas::{RelLinkCollection, HttpMethod, RelLink};
+    ///
+    /// let collection = RelLinkCollection::new(vec![("rel_id", "/rel_path/", HttpMethod::Get).into()]);
+    ///
+    /// assert_eq!(collection.get("rel_id"), Some(&RelLink::new("rel_id", "/rel_path/", HttpMethod::Get)));
+    /// ```
     pub fn get(&self, rel: &str) -> Option<&RelLink> {
         self.0.iter().find(|rl| rl.rel == rel)
     }
 
-    pub fn has(&self, rel: &str) -> bool {
-        self.get(rel).is_some()
-    }
-
+    /// ## Get RelLink from Collection
+    /// Getting a RelLink from the collection by rel id.
+    ///
+    /// ```
+    /// use hateoas::{RelLinkCollection, HttpMethod, RelLink};
+    ///
+    /// let mut collection = RelLinkCollection::new(vec![("rel_id", "/rel_path/", HttpMethod::Get).into()]);
+    /// let mut rel_from_collection = collection.get_mut("rel_id");
+    /// rel_from_collection.map(|t| *t = RelLink::new("rel_id_2", "/rel_path_2/", HttpMethod::Connect));
+    ///
+    /// assert_eq!(collection.get("rel_id_2"), Some(&RelLink::new("rel_id_2", "/rel_path_2/", HttpMethod::Connect)));
+    /// ```
     pub fn get_mut(&mut self, rel: &str) -> Option<&mut RelLink> {
         self.0.iter_mut().find(|rl| rl.rel == rel)
     }
 
-    pub fn add(&mut self, rel: &str, link: RelLink) -> Option<RelLink> {
-        let mut new_link = link;
-        new_link.rel = rel.to_string();
+    /// ## Has RelLink in Collection
+    /// Checking if a rel_id already exists in the collection.
+    ///
+    /// ```
+    /// use hateoas::{RelLinkCollection, HttpMethod, RelLink};
+    ///
+    /// let mut collection = RelLinkCollection::new(vec![("rel_id", "/rel_path/", HttpMethod::Get).into()]);
+    ///
+    /// assert_eq!(collection.has("rel_id"), true);
+    /// assert_eq!(collection.has("rel_id_2"), false);
+    /// ```
+    pub fn has(&self, rel: &str) -> bool {
+        self.get(rel).is_some()
+    }
+
+    /// ## Add RelLink to the collection
+    /// Adding a link to the collection of RelLinks, if the link already exists it will insert the new data and return the old.
+    ///
+    /// ```
+    /// use hateoas::{RelLinkCollection, HttpMethod, RelLink};
+    ///
+    /// let mut collection = RelLinkCollection::new(vec![("rel_id", "/rel_path/", HttpMethod::Get).into()]);
+    /// let old_data = collection.add(("rel_id", "/rel_path_2/", HttpMethod::Connect));
+    ///
+    /// assert_eq!(old_data, Some(RelLink::new("rel_id", "/rel_path/", HttpMethod::Get)));
+    /// assert_eq!(collection.get("rel_id"), Some(&RelLink::new("rel_id", "/rel_path_2/", HttpMethod::Connect)));
+    /// ```
+    pub fn add<I: Into<RelLink>>(&mut self, rel: I) -> Option<RelLink> {
+        let new_link: RelLink = rel.into();
         let mut old_link = None;
-        if let Some(found_rel) = self.get_mut(rel) {
+        if let Some(found_rel) = self.get_mut(new_link.rel()) {
             old_link = Some(found_rel.clone());
             *found_rel = new_link;
         } else {
