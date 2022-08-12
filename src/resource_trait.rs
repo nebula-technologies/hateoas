@@ -1,4 +1,4 @@
-use crate::HateoasResponse;
+use crate::Hateoas;
 use serde::Serialize;
 use std::collections::HashMap;
 
@@ -58,5 +58,5 @@ pub trait AsHateoasResponse<T>
 where
     T: Serialize + HateoasResource,
 {
-    fn as_response(&mut self) -> &mut HateoasResponse<T>;
+    fn as_response(&mut self) -> &mut Hateoas<T>;
 }

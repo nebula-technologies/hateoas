@@ -4,23 +4,25 @@ use railsgun::OptionsExtended;
 use std::ops::{Deref, DerefMut};
 
 #[derive(Serialize, PartialEq, Debug)]
-pub struct Content<T> {
+pub struct Content<T: Serialize> {
     content: Option<T>,
     rel: Option<RelLinkCollection>,
 }
-impl<T> Content<T> {
+impl<T: Serialize> Content<T> {
     /// Setting the content on the Content container
     ///
     /// ```
     /// use hateoas::Content;
-    /// let mut ctn_with_content = Content::default();
-    /// ctn_with_content.content(());
+    /// let mut ctn_with_content = Content::new(());
     ///
     /// assert_eq!(ctn_with_content.has_content(), true);
-    /// assert_eq!(ctn_with_content.get_content(), &Some(()));
+    /// assert_eq!(ctn_with_content.content(), &Some(()));
     /// ```
-    pub fn content(&mut self, content: T) {
-        self.content = Some(content);
+    pub fn new(content: T) -> Self {
+        Content {
+            content: Some(content),
+            rel: None,
+        }
     }
 
     /// Checking if the content has any information in it, eg. is not none
@@ -28,8 +30,7 @@ impl<T> Content<T> {
     /// ```
     /// use hateoas::Content;
     /// let ctn: Content<()> = Content::default();
-    /// let mut ctn_with_content = Content::default();
-    /// ctn_with_content.content(());
+    /// let mut ctn_with_content = Content::new(Some(()));
     ///
     /// assert_eq!(ctn.has_content(), false);
     /// assert_eq!(ctn_with_content.has_content(), true);
@@ -45,19 +46,15 @@ impl<T> Content<T> {
     /// use hateoas::{Content};
     /// let mut ctn: Content<String> = Content::default();
     ///
-    /// assert_eq!(ctn.get_content(), &None);
+    /// assert_eq!(ctn.content_mut(), &None);
     ///
-    /// ctn.content("foo".to_string());
+    /// let mut_ctn = ctn.content_mut();
+    /// *(mut_ctn) = Some("bar".to_string());
     ///
-    /// assert_eq!(ctn.get_content(), &Some("foo".to_string()));
-    ///
-    /// let mut_ctn = ctn.get_mut_content();
-    /// mut_ctn.map(|t| *t = "bar".to_string());
-    ///
-    /// assert_eq!(ctn.get_content(), &Some("bar".to_string()));
+    /// assert_eq!(ctn.content(), &Some("bar".to_string()));
     /// ```
-    pub fn get_mut_content(&mut self) -> Option<&mut T> {
-        self.content.as_mut()
+    pub fn content_mut(&mut self) -> &mut Option<T> {
+        &mut self.content
     }
 
     /// Getting a reference of the current spec content
@@ -66,13 +63,13 @@ impl<T> Content<T> {
     /// use hateoas::{Content, RelLinkCollection};
     /// let mut ctn = Content::default();
     ///
-    /// assert_eq!(ctn.get_content(), &None);
+    /// assert_eq!(ctn.content(), &None);
     ///
-    /// ctn.content(());
+    /// *(ctn.content_mut()) = Some(());
     ///
-    /// assert_eq!(ctn.get_content(), &Some(()))
+    /// assert_eq!(ctn.content(), &Some(()))
     /// ```
-    pub fn get_content(&self) -> &Option<T> {
+    pub fn content(&self) -> &Option<T> {
         &self.content
     }
 
@@ -114,7 +111,7 @@ impl<T: Serialize> Default for Content<T> {
 ///
 /// assert_eq!(content_opt, &None);
 /// ```
-impl<T> Deref for Content<T> {
+impl<T: Serialize> Deref for Content<T> {
     type Target = Option<T>;
     fn deref(&self) -> &Self::Target {
         &self.content
@@ -131,8 +128,14 @@ impl<T> Deref for Content<T> {
 ///
 /// assert_eq!(content_opt, &mut None);
 /// ```
-impl<T> DerefMut for Content<T> {
+impl<T: Serialize> DerefMut for Content<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.content
+    }
+}
+
+impl<T: Serialize> From<T> for Content<T> {
+    fn from(t: T) -> Self {
+        Content::new(t)
     }
 }
