@@ -179,3 +179,32 @@ impl Status {
         )
     }
 }
+
+macro_rules! relational_links {
+    (
+        $(
+            $(#[$docs:meta])*
+            ($konst:ident, $function:ident);
+        )+
+    ) => {
+        impl RelLink {
+        $(
+            $(#[$docs])*
+            #[doc = " ```\n" ]
+            #[doc = " use hateoas::{HttpMethod, RelLink};\n"]
+            #[doc = " \n" ]
+            #[doc = concat!(" let rel = RelLink::", stringify!($function), "(\"object\", \"/path/to/objects\");\n") ]
+            #[doc = " \n" ]
+            #[doc = concat!(" assert_eq!(rel, RelLink::new(\"object\", \"/path/to/objects\", HttpMethod::", stringify!($konst), "));\n") ]
+            #[doc = " ``` "]
+            pub fn $function(rel: &str, href: &str) -> RelLink {
+                RelLink{
+                    href: format!("{}",href),
+                    rel: format!("{}",rel),
+                    method: HttpMethod::$konst,
+                }
+            }
+        )+
+        }
+    }
+}
