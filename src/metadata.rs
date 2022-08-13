@@ -1,9 +1,11 @@
-
 use std::collections::HashMap;
 
 #[derive(Serialize, PartialEq, Debug, Default)]
 pub struct Metadata {
+    pub(crate) id: Option<String>,
+    pub(crate) name: Option<String>,
     pub(crate) annotations: HashMap<String, String>,
+    pub(crate) signature: Option<String>,
 }
 /// # Metadata
 /// Metadata is a collection of alternative information send/recieved from the system

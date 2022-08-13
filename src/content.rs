@@ -101,40 +101,48 @@ impl<T: Serialize> Default for Content<T> {
     }
 }
 
-/// Dereferencing the Internal [T] from the Content object
-/// This allows us to better operate on the content itself and use it without having to extract it.
-/// ```
-/// use std::ops::Deref;
-/// use hateoas::Content;
-/// let content: Content<()> = Content::default();
-/// let content_opt: &Option<()> = content.deref();
-///
-/// assert_eq!(content_opt, &None);
-/// ```
 impl<T: Serialize> Deref for Content<T> {
     type Target = Option<T>;
+    /// Dereferencing the Internal [T] from the Content object
+    /// This allows us to better operate on the content itself and use it without having to extract it.
+    /// ```
+    /// use std::ops::Deref;
+    /// use hateoas::Content;
+    /// let content: Content<()> = Content::default();
+    /// let content_opt: &Option<()> = content.deref();
+    ///
+    /// assert_eq!(content_opt, &None);
+    /// ```
     fn deref(&self) -> &Self::Target {
         &self.content
     }
 }
 
-/// Dereferencing the Internal [T] from the Content object
-/// This allows us to better operate on the content itself and use it without having to extract it.
-/// ```
-/// use std::ops::{Deref, DerefMut};
-/// use hateoas::Content;
-/// let mut content: Content<()> = Content::default();
-/// let content_opt: &Option<()> = content.deref_mut();
-///
-/// assert_eq!(content_opt, &mut None);
-/// ```
 impl<T: Serialize> DerefMut for Content<T> {
+    /// Dereferencing the Internal [T] from the Content object
+    /// This allows us to better operate on the content itself and use it without having to extract it.
+    /// ```
+    /// use std::ops::{Deref, DerefMut};
+    /// use hateoas::Content;
+    /// let mut content: Content<()> = Content::default();
+    /// let content_opt: &Option<()> = content.deref_mut();
+    ///
+    /// assert_eq!(content_opt, &mut None);
+    /// ```
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.content
     }
 }
 
 impl<T: Serialize> From<T> for Content<T> {
+    /// ## Convert from any type into a content<T> type.
+    /// This will simply wrap the `T` in a `Content` allowing for easier manipulation.
+    /// ```
+    /// use hateoas::Content;
+    /// let void: Content<()> = ().into();
+    ///
+    /// assert_eq!(void, Content::new(()));
+    /// ```
     fn from(t: T) -> Self {
         Content::new(t)
     }
