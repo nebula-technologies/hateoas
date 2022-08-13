@@ -1,4 +1,4 @@
-#[derive(Serialize, Debug, PartialEq, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct Status {
     pub(crate) message: Option<String>,
     pub(crate) code: Option<u32>,

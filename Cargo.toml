@@ -15,3 +15,6 @@ railsgun = "2.0.0"
 serde = "1.0.143"
 serde_derive = "1.0.143"
 uuid = {version = "1.1.2", features = ["serde", "v4"]}
+
+[dev-dependencies]
+serde_json = "1.0.83"

@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RelLink {
     pub(crate) href: String,
     pub(crate) rel: String,
@@ -121,7 +121,7 @@ impl From<(&str, &str, HttpMethod)> for RelLink {
     }
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum HttpMethod {
     Get,
     Head,

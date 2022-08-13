@@ -20,7 +20,62 @@ pub use status::Status;
 
 #[cfg(test)]
 mod test {
-    use crate::{Content, Hateoas, RelLinkCollection};
+    use crate::{Content, Hateoas, HateoasResource, RelLinkCollection};
+
+    #[derive(Serialize, Deserialize, Default)]
+    pub struct RubberBullet {
+        pub name: String,
+        pub title: String,
+        pub chapter: String,
+    }
+
+    impl HateoasResource for RubberBullet {
+        const KIND: &'static str = "";
+        const VERSION: &'static str = "";
+        const GROUP: &'static str = "";
+        const URL_PATH_SEGMENT: &'static str = "";
+    }
+
+    const RUBBER_BULLET_SER: &str = r#"{
+      "apiVersion": "/",
+      "kind": "",
+      "metadata": null,
+      "spec": {
+        "content": {
+          "name": "Rubber Bullet",
+          "title": "The Bullet",
+          "chapter": "A Rubber Bullet Hurts"
+        },
+        "rel": null
+      },
+      "status": {
+        "message": "OK",
+        "code": null,
+        "http_status_code": 200,
+        "session": null
+      }
+    }"#;
+
+    #[test]
+    pub fn serialize_test() {
+        let rubber_bullet = RubberBullet {
+            name: "Rubber Bullet".to_string(),
+            title: "The Bullet".to_string(),
+            chapter: "A Rubber Bullet Hurts".to_string(),
+        };
+
+        let response = Hateoas::OK(rubber_bullet);
+
+        let response_ser: serde_json::Value = serde_json::to_value(&response).unwrap();
+
+        println!("{:#?}", response_ser);
+    }
+    #[test]
+    pub fn deserialize_test() {
+        let response_ser: serde_json::Value = serde_json::from_str(RUBBER_BULLET_SER).unwrap();
+
+        println!("{:#?}", response_ser);
+    }
 
     // #[test]
     // fn default_response_test() {

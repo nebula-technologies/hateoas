@@ -69,7 +69,7 @@ use crate::RelLink;
 /// assert_eq!(updated_rel, Some(&("foo-bar", "foo-bar", HttpMethod::Connect).into()));
 /// ```
 
-#[derive(Debug, Serialize, PartialEq, Default)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
 pub struct RelLinkCollection(Vec<RelLink>);
 
 impl RelLinkCollection {

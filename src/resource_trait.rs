@@ -57,7 +57,7 @@ pub trait ToHateoasResponse<T> {
 
 pub trait AsHateoasResponse<T>
 where
-    T: Serialize + DeserializeOwned + HateoasResource,
+    T: Serialize + HateoasResource,
 {
     fn as_response(&mut self) -> &mut Hateoas<T>;
 }

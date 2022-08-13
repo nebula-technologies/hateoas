@@ -3,12 +3,12 @@ use crate::RelLinkCollection;
 use serde::de::DeserializeOwned;
 use std::ops::{Deref, DerefMut};
 
-#[derive(Serialize, PartialEq, Debug)]
-pub struct Content<T: Serialize + DeserializeOwned> {
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+pub struct Content<T: Serialize> {
     content: Option<T>,
     rel: Option<RelLinkCollection>,
 }
-impl<T: Serialize + DeserializeOwned> Content<T> {
+impl<T: Serialize> Content<T> {
     /// Setting the content on the Content container
     ///
     /// ```
@@ -92,7 +92,7 @@ impl<T: Serialize + DeserializeOwned> Content<T> {
     }
 }
 
-impl<T: Serialize + DeserializeOwned> Default for Content<T> {
+impl<T: Serialize> Default for Content<T> {
     fn default() -> Self {
         Content {
             content: None,
@@ -101,7 +101,7 @@ impl<T: Serialize + DeserializeOwned> Default for Content<T> {
     }
 }
 
-impl<T: Serialize + DeserializeOwned> Deref for Content<T> {
+impl<T: Serialize> Deref for Content<T> {
     type Target = Option<T>;
     /// Dereferencing the Internal [T] from the Content object
     /// This allows us to better operate on the content itself and use it without having to extract it.
@@ -118,7 +118,7 @@ impl<T: Serialize + DeserializeOwned> Deref for Content<T> {
     }
 }
 
-impl<T: Serialize + DeserializeOwned> DerefMut for Content<T> {
+impl<T: Serialize> DerefMut for Content<T> {
     /// Dereferencing the Internal [T] from the Content object
     /// This allows us to better operate on the content itself and use it without having to extract it.
     /// ```
@@ -134,7 +134,7 @@ impl<T: Serialize + DeserializeOwned> DerefMut for Content<T> {
     }
 }
 
-impl<T: Serialize + DeserializeOwned> From<T> for Content<T> {
+impl<T: Serialize> From<T> for Content<T> {
     /// ## Convert from any type into a content<T> type.
     /// This will simply wrap the `T` in a `Content` allowing for easier manipulation.
     /// ```
