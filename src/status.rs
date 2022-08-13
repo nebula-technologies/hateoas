@@ -211,6 +211,7 @@ macro_rules! automated_status_codes {
             #[doc = " \n" ]
             #[doc = concat!(" assert_eq!(status, Status::const_new(Some(", stringify!($phrase), ".to_string()), None, Some(", stringify!($num), "), None));\n") ]
             #[doc = " ``` "]
+            #[allow(non_snake_case)]
              pub fn $konst() -> Self {
                 Self::const_new(
                     Some($phrase.to_string()),

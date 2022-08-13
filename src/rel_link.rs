@@ -151,6 +151,7 @@ macro_rules! relational_links {
             #[doc = " \n" ]
             #[doc = concat!(" assert_eq!(rel, RelLink::new(\"object\", \"/path/to/objects\", HttpMethod::", stringify!($konst), "));\n") ]
             #[doc = " ``` "]
+            #[allow(non_snake_case)]
             pub fn $function(rel: &str, href: &str) -> RelLink {
                 RelLink{
                     href: format!("{}",href),

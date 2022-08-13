@@ -1,10 +1,10 @@
 use crate::resource_trait::HateoasResource;
 use crate::serde::Serialize;
 use crate::{Content, Metadata, Status};
-use railsgun::OptionsExtended;
+use serde::de::DeserializeOwned;
 
 #[derive(Serialize, Debug, PartialEq)]
-pub struct Hateoas<T: Serialize + HateoasResource> {
+pub struct Hateoas<T: Serialize + DeserializeOwned + HateoasResource> {
     #[serde(rename = "apiVersion")]
     pub api_version: String,
     pub kind: String,
@@ -13,7 +13,7 @@ pub struct Hateoas<T: Serialize + HateoasResource> {
     pub status: Option<Status>,
 }
 
-impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
+impl<T: Serialize + DeserializeOwned + Default + HateoasResource> Hateoas<T> {
     /// ## New Hateoas.
     /// this will create a new instance of Hateoas that will make it easier to crate API replyes for services.
     ///
@@ -96,7 +96,7 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// assert_eq!(&mut metadata, response.metadata_mut());
     /// ```
     pub fn metadata_mut(&mut self) -> &mut Metadata {
-        self.metadata.get_or_insert_default()
+        self.metadata.get_or_insert_with(Metadata::default)
     }
 
     /// ## Getter for the status property
@@ -125,7 +125,7 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// assert_eq!(&mut Status::default(), status)
     /// ```
     pub fn status_mut(&mut self) -> &mut Status {
-        self.status.get_or_insert_default()
+        self.status.get_or_insert_with(Status::default)
     }
 
     /// ## Getter for the spec property
@@ -157,11 +157,11 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// assert_eq!(&mut Content::default(), spec)
     /// ```
     pub fn spec_mut(&mut self) -> &mut Content<T> {
-        self.spec.get_or_insert_default()
+        self.spec.get_or_insert_with(Content::default)
     }
 }
 
-impl<T: Serialize + HateoasResource> Default for Hateoas<T> {
+impl<T: Serialize + DeserializeOwned + HateoasResource> Default for Hateoas<T> {
     fn default() -> Self {
         Hateoas {
             api_version: format!("{}/{}", T::GROUP, T::VERSION),
@@ -180,7 +180,7 @@ macro_rules! automated_code_hateoas {
             ($num:expr, $konst:ident, $phrase:expr);
         )+
     ) => {
-        impl<T: Serialize + HateoasResource + Default> Hateoas<T> {
+        impl<T: Serialize + DeserializeOwned + HateoasResource + Default> Hateoas<T> {
         $(
             $(#[$docs])*
             #[doc = " ```\n" ]
@@ -190,6 +190,7 @@ macro_rules! automated_code_hateoas {
             #[doc = " \n" ]
             #[doc = concat!(" assert_eq!(hateoas, Hateoas::new(Some(Content::new(", stringify!($phrase), ".to_string())), None, Some(Status::", stringify!($konst), "())));\n") ]
             #[doc = " ``` "]
+            #[allow(non_snake_case)]
             pub fn $konst(data: T) -> Self {
                 Self::new(Some(Content::new(data)), None, Some(Status::$konst()))
             }
