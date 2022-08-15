@@ -187,13 +187,13 @@ macro_rules! automated_code_hateoas {
             #[doc = " ```\n" ]
             #[doc = " use hateoas::{Hateoas,Content,Status};\n"]
             #[doc = " \n" ]
-            #[doc = concat!(" let hateoas: Hateoas<String> = Hateoas::", stringify!($konst), "(", stringify!($phrase), ".to_string());\n") ]
+            #[doc = concat!(" let hateoas: Hateoas<String> = Hateoas::", stringify!($konst), "(Some(", stringify!($phrase), ".to_string()));\n") ]
             #[doc = " \n" ]
             #[doc = concat!(" assert_eq!(hateoas, Hateoas::new(Some(Content::new(", stringify!($phrase), ".to_string())), None, Some(Status::", stringify!($konst), "())));\n") ]
             #[doc = " ``` "]
             #[allow(non_snake_case)]
-            pub fn $konst(data: T) -> Self {
-                Self::new(Some(Content::new(data)), None, Some(Status::$konst()))
+            pub fn $konst(data: Option<T>) -> Self {
+                Self::new(data.map(|t| Content::new(t)), None, Some(Status::$konst()))
             }
 
         )+

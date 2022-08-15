@@ -22,11 +22,21 @@ pub use status::Status;
 mod test {
     use crate::{Content, Hateoas, HateoasResource, RelLinkCollection};
 
-    #[derive(Serialize, Deserialize, Default)]
+    #[derive(Serialize, Deserialize)]
     pub struct RubberBullet {
         pub name: String,
         pub title: String,
         pub chapter: String,
+    }
+
+    impl Default for RubberBullet {
+        fn default() -> Self {
+            RubberBullet {
+                name: "Rubber Bullet".to_string(),
+                title: "The Bullet".to_string(),
+                chapter: "A Rubber Bullet Hurts".to_string(),
+            }
+        }
     }
 
     impl HateoasResource for RubberBullet {
@@ -64,7 +74,7 @@ mod test {
             chapter: "A Rubber Bullet Hurts".to_string(),
         };
 
-        let response = Hateoas::OK(rubber_bullet);
+        let response = Hateoas::OK(Some(rubber_bullet));
 
         let response_ser: serde_json::Value = serde_json::to_value(&response).unwrap();
 
