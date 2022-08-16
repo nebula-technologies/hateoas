@@ -1,3 +1,4 @@
+#[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct Status {
     pub(crate) message: Option<String>,

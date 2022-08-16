@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[skip_serializing_none]
 #[derive(Serialize, Deserialize, PartialEq, Debug, Default)]
 pub struct Metadata {
     pub(crate) id: Option<String>,

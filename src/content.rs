@@ -3,6 +3,7 @@ use crate::RelLinkCollection;
 use serde::de::DeserializeOwned;
 use std::ops::{Deref, DerefMut};
 
+#[skip_serializing_none]
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Content<T: Serialize> {
     content: Option<T>,
