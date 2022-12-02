@@ -3,22 +3,33 @@ extern crate serde_derive;
 extern crate serde;
 #[macro_use]
 extern crate serde_with;
+extern crate bytes;
 
 mod content;
 mod hateoas;
+mod header;
+mod http_method;
 mod metadata;
-mod rel_link;
-mod rel_link_collection;
+mod rel;
 mod resource_trait;
 mod status;
+pub mod trait_hateoas;
+pub mod trait_simple_data;
 
 pub use crate::hateoas::Hateoas;
 pub use content::Content;
+pub use http_method::HttpMethod;
 pub use metadata::Metadata;
-pub use rel_link::{HttpMethod, RelLink};
-pub use rel_link_collection::RelLinkCollection;
+pub use rel::rel_link::RelLink;
+pub use rel::rel_link_collection::RelLinkCollection;
 pub use resource_trait::{AsHateoasResponse, HateoasResource, ToHateoasResponse};
+use serde::Serialize;
 pub use status::Status;
+
+pub struct Payload<T: Serialize, Deserialize>(T);
+
+impl<H: HateoasResource, T: Hateoas<H>> Payload<T> {}
+impl<H: HateoasResource, T: SimpleData<H>> Payload<T> {}
 
 #[cfg(test)]
 mod test {
@@ -116,6 +127,6 @@ mod test {
         // at [Response.spec()] Spec will be initialized and returned.
 
         let mut spec = response.spec_mut();
-        assert_eq!(&mut Content::default(), spec)
+        assert_eq!(Some(&mut Content::default()), spec)
     }
 }

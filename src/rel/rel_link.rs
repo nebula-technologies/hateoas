@@ -1,8 +1,12 @@
+use crate::header::HeaderMap;
+use crate::http_method::HttpMethod;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RelLink {
     pub(crate) href: String,
     pub(crate) rel: String,
     pub(crate) method: HttpMethod,
+    pub(crate) header: HeaderMap,
 }
 
 impl RelLink {
@@ -21,6 +25,7 @@ impl RelLink {
             href: href.to_string(),
             rel: rel.to_string(),
             method,
+            header: HeaderMap::default(),
         }
     }
 
@@ -121,19 +126,6 @@ impl From<(&str, &str, HttpMethod)> for RelLink {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum HttpMethod {
-    Get,
-    Head,
-    Post,
-    Put,
-    Delete,
-    Connect,
-    Options,
-    Trace,
-    Patch,
-}
-
 macro_rules! relational_links {
     (
         $(
@@ -157,6 +149,7 @@ macro_rules! relational_links {
                     href: format!("{}",href),
                     rel: format!("{}",rel),
                     method: HttpMethod::$konst,
+                    header: HeaderMap::default()
                 }
             }
         )+

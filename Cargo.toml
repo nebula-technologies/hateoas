@@ -11,6 +11,7 @@ repository = "https://github.com/nebula-technologies/hateoas"
 
 
 [dependencies]
+bytes = "1.3.0"
 railsgun = "2.0.0"
 serde = "1.0.143"
 serde_derive = "1.0.143"

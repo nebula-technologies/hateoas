@@ -1,3 +1,4 @@
+use crate::header::HeaderMap;
 use std::collections::HashMap;
 
 #[skip_serializing_none]
@@ -7,6 +8,7 @@ pub struct Metadata {
     pub(crate) name: Option<String>,
     pub(crate) annotations: HashMap<String, String>,
     pub(crate) signature: Option<String>,
+    pub(crate) header: HeaderMap,
 }
 /// # Metadata
 /// Metadata is a collection of alternative information send/recieved from the system
