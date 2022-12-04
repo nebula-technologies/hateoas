@@ -1,6 +1,7 @@
 use crate::resource_trait::HateoasResource;
 use crate::serde::Serialize;
 use crate::{Content, Metadata, Status};
+use serde::de::DeserializeOwned;
 use serde::Deserialize;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -17,12 +18,13 @@ pub enum Hateoas<T: Serialize + HateoasResource> {
     Simple(T),
 }
 
-impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for Hateoas<T> {
+impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// ## New Hateoas.
     /// this will create a new instance of Hateoas that will make it easier to crate API replyes for services.
     ///
     /// ```
     /// use hateoas::Hateoas;
+    /// use hateoas::HateoasData;
     ///
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
@@ -33,7 +35,11 @@ impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for
     /// assert_eq!(Some(&"String".to_string()), new_hateoas_response.kind());
     /// assert_eq!(Some(&"hateoas.io/0.0.1".to_string()), new_hateoas_response.api_version());
     /// ```
-    fn new(spec: Option<Content<T>>, metadata: Option<Metadata>, status: Option<Status>) -> Self {
+    pub fn new(
+        spec: Option<Content<T>>,
+        metadata: Option<Metadata>,
+        status: Option<Status>,
+    ) -> Self {
         Self::Hateoas {
             api_version: format!("{}/{}", T::GROUP, T::VERSION),
             kind: format!("{}", T::KIND),
@@ -47,12 +53,13 @@ impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for
     /// This will return the kind of the resource requested.
     /// ```
     /// use hateoas::Hateoas;
+    /// use hateoas::HateoasData;
     ///
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
     /// assert_eq!(Some(&"String".to_string()), new_hateoas_response.kind());
     /// ```
-    fn kind(&self) -> Option<&String> {
+    pub fn kind(&self) -> Option<&String> {
         match self {
             Hateoas::Hateoas { kind, .. } => Some(&kind),
             Hateoas::Simple(_) => None,
@@ -64,12 +71,13 @@ impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for
     /// multiple versions on the system.
     /// ```
     /// use hateoas::Hateoas;
+    /// use hateoas::HateoasData;
     ///
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
     /// assert_eq!(Some(&"hateoas.io/0.0.1".to_string()), new_hateoas_response.api_version());
     /// ```
-    fn api_version(&self) -> Option<&String> {
+    pub fn api_version(&self) -> Option<&String> {
         match self {
             Hateoas::Hateoas { api_version, .. } => Some(&api_version),
             Hateoas::Simple(_) => None,
@@ -82,13 +90,14 @@ impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for
     /// property with the metadata object.
     /// ```
     /// use hateoas::Hateoas;
+    /// use hateoas::HateoasData;
     ///
     /// let hateoas: Hateoas<()> = Hateoas::default();
     /// let metadata = hateoas.metadata();
     ///
     /// assert_eq!(None, metadata)
     /// ```
-    fn metadata(&self) -> Option<&Metadata> {
+    pub fn metadata(&self) -> Option<&Metadata> {
         match self {
             Hateoas::Hateoas { metadata, .. } => metadata.as_ref(),
             Hateoas::Simple(_) => None,
@@ -98,13 +107,14 @@ impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for
     /// By default metadata is not initialized and will be initialized upon usage.
     /// ```
     /// use hateoas::{Hateoas, Metadata};
+    /// use hateoas::HateoasData;
     ///
     /// let mut response: Hateoas<()> = Hateoas::default();
     /// let mut metadata = Metadata::default();
     ///
     /// assert_eq!(Some(&mut metadata), response.metadata_mut());
     /// ```
-    fn metadata_mut(&mut self) -> Option<&mut Metadata> {
+    pub fn metadata_mut(&mut self) -> Option<&mut Metadata> {
         match self {
             Hateoas::Hateoas { metadata, .. } => Some(metadata.insert(Metadata::default())),
             Hateoas::Simple(_) => None,
@@ -117,13 +127,14 @@ impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for
     /// property with the status object.
     /// ```
     /// use hateoas::Hateoas;
+    /// use hateoas::HateoasData;
     ///
     /// let hateoas: Hateoas<()> = Hateoas::default();
     /// let status = hateoas.status();
     ///
     /// assert_eq!(None, status)
     /// ```
-    fn status(&self) -> Option<&Status> {
+    pub fn status(&self) -> Option<&Status> {
         match self {
             Hateoas::Hateoas { status, .. } => status.as_ref(),
             Hateoas::Simple(_) => None,
@@ -133,13 +144,14 @@ impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for
     /// If this is not initialized it will be initialized and returned.
     /// ```
     /// use hateoas::{Hateoas, Status};
+    /// use hateoas::HateoasData;
     ///
     /// let mut response: Hateoas<()> = Hateoas::default();
     ///
     /// let mut status = response.status_mut();
     /// assert_eq!(Some(&mut Status::default()), status)
     /// ```
-    fn status_mut(&mut self) -> Option<&mut Status> {
+    pub fn status_mut(&mut self) -> Option<&mut Status> {
         match self {
             Hateoas::Hateoas { status, .. } => Some(status.insert(Status::default())),
             Hateoas::Simple(_) => None,
@@ -152,13 +164,14 @@ impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for
     /// property with the spec object.
     /// ```
     /// use hateoas::Hateoas;
+    /// use hateoas::HateoasData;
     ///
     /// let hateoas: Hateoas<()> = Hateoas::default();
     /// let spec = hateoas.spec();
     ///
     /// assert_eq!(None, spec)
     /// ```
-    fn spec(&self) -> Option<&Content<T>> {
+    pub fn spec(&self) -> Option<&Content<T>> {
         match self {
             Hateoas::Hateoas { spec, .. } => spec.as_ref(),
             Hateoas::Simple(_) => None,
@@ -169,6 +182,8 @@ impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for
     ///
     /// ```
     /// use hateoas::{Content, Hateoas};
+    /// use hateoas::HateoasData;
+    ///
     /// let mut response: Hateoas<String> = Hateoas::default();
     ///
     /// // Here spec will be None at initialization time.
@@ -177,21 +192,21 @@ impl<T: Serialize + Default + HateoasResource> crate::trait_hateoas::Hateoas for
     /// let mut spec = response.spec_mut();
     /// assert_eq!(Some(&mut Content::default()), spec)
     /// ```
-    fn spec_mut(&mut self) -> Option<&mut Content<T>> {
+    pub fn spec_mut(&mut self) -> Option<&mut Content<T>> {
         match self {
             Hateoas::Hateoas { spec, .. } => Some(spec.insert(Content::default())),
             Hateoas::Simple(_) => None,
         }
     }
 
-    fn content(&self) -> Option<&T> {
+    pub fn content(&self) -> Option<&T> {
         match self {
             Hateoas::Hateoas { spec, .. } => spec.as_ref().and_then(|t| t.as_ref()),
             Hateoas::Simple(t) => Some(t),
         }
     }
 
-    fn content_mut(&mut self) -> Option<&mut T> {
+    pub fn content_mut(&mut self) -> Option<&mut T> {
         match self {
             Hateoas::Hateoas { spec, .. } => spec.as_mut().and_then(|t| t.as_mut()),
             Hateoas::Simple(t) => Some(t),

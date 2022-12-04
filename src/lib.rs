@@ -13,8 +13,6 @@ mod metadata;
 mod rel;
 mod resource_trait;
 mod status;
-pub mod trait_hateoas;
-pub mod trait_simple_data;
 
 pub use crate::hateoas::Hateoas;
 pub use content::Content;
@@ -23,13 +21,41 @@ pub use metadata::Metadata;
 pub use rel::rel_link::RelLink;
 pub use rel::rel_link_collection::RelLinkCollection;
 pub use resource_trait::{AsHateoasResponse, HateoasResource, ToHateoasResponse};
-use serde::Serialize;
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
 pub use status::Status;
+use std::fmt::Debug;
+use std::ops::{Deref, DerefMut};
 
-pub struct Payload<T: Serialize, Deserialize>(T);
+pub struct Payload<T: Serialize + DeserializeOwned>(T);
 
-impl<H: HateoasResource, T: Hateoas<H>> Payload<T> {}
-impl<H: HateoasResource, T: SimpleData<H>> Payload<T> {}
+impl<T: Serialize + DeserializeOwned> Payload<T> {
+    pub fn new_hateoas<U: Serialize + DeserializeOwned + Default + HateoasResource>(
+        spec: Option<Content<U>>,
+        metadata: Option<Metadata>,
+        status: Option<Status>,
+    ) -> Payload<Hateoas<U>> {
+        Payload(Hateoas::new(spec, metadata, status))
+    }
+
+    pub fn new(val: T) -> Self {
+        Payload(val)
+    }
+}
+
+impl<T: Serialize + DeserializeOwned> Deref for Payload<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T: Serialize + DeserializeOwned> DerefMut for Payload<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 #[cfg(test)]
 mod test {
