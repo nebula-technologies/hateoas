@@ -1,6 +1,6 @@
 use crate::frameworks::actix::error::ActixError;
 use crate::frameworks::payload_control::PayloadControl;
-use actix_http::Payload;
+use actix_web::dev::Payload;
 use actix_web::error::PayloadError;
 use actix_web::http::header::CONTENT_LENGTH;
 use actix_web::HttpRequest;
@@ -23,7 +23,7 @@ pub enum PayloadBody<T, O> {
         /// Length as reported by `Content-Length` header, if present.
         length: Option<usize>,
         content_type: ContentType,
-        payload: actix_http::Payload,
+        payload: Payload,
         buf: BytesMut,
         _res: PhantomData<T>,
         _payload_res: PhantomData<O>,
@@ -35,7 +35,7 @@ impl<T, O> Unpin for PayloadBody<T, O> {}
 impl<T: DeserializeOwned, O: PayloadControl> PayloadBody<T, O> {
     /// Create a new future to decode a JSON request payload.
     #[allow(clippy::borrow_interior_mutable_const)]
-    pub fn new(r: HttpRequest, payload: &mut actix_http::Payload) -> Self {
+    pub fn new(r: HttpRequest, payload: &mut Payload) -> Self {
         let length = r
             .headers()
             .get(&CONTENT_LENGTH)
@@ -147,7 +147,7 @@ impl<T: DeserializeOwned, O: PayloadControl> Future for PayloadBody<T, O> {
                             .as_slice()
                             .decode(content_type.deref())
                             .map(|d: Decoded<T>| d.into())
-                            .map_err(PayloadError::Deserialize)?;
+                            .map_err(ActixError::SerializationDeserializationError)?;
                         return Poll::Ready(Ok(json));
                     }
                 }

@@ -4,13 +4,15 @@ pub mod future;
 
 use crate::frameworks::actix::error::ActixError;
 use crate::frameworks::actix::future::PayloadFuture;
-use crate::frameworks::payload_control::PayloadControl;
+use crate::frameworks::payload_control::{DebuggableAny, PayloadControl};
 use crate::Payload;
 use actix_web::body::BoxBody;
 use actix_web::dev::Response;
-use actix_web::{FromRequest, HttpRequest, HttpResponse, Responder};
+use actix_web::http::StatusCode;
+use actix_web::{FromRequest, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use simple_serde::ContentType;
 
 impl<T> FromRequest for Payload<T>
 where
@@ -65,6 +67,28 @@ impl<T: Serialize> Responder for Payload<T> {
                     StatusCode::from_u16(code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
                 ),
                 None => HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR),
+            },
+        }
+    }
+}
+
+impl<T, E: DebuggableAny> From<Result<T, E>> for Payload<T> {
+    fn from(r: Result<T, E>) -> Self {
+        let message = if let Err(e) = &r {
+            Some(format!("{:?}", e))
+        } else {
+            None
+        };
+        match r {
+            Err(e) => Self::Error {
+                error: Some(Box::new(e)),
+                http_code: None,
+                message,
+            },
+            Ok(t) => Self::Data {
+                data: t,
+                http_code: None,
+                message,
             },
         }
     }

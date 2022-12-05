@@ -82,3 +82,8 @@ impl From<std::num::ParseIntError> for ActixError {
         Self::FailedToParseToInt(e)
     }
 }
+impl From<PayloadError> for ActixError {
+    fn from(e: PayloadError) -> Self {
+        Self::Payload(e)
+    }
+}
