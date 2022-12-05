@@ -8,14 +8,14 @@ use crate::RelLink;
 /// use hateoas::{HttpMethod, RelLink, RelLinkCollection};
 ///
 /// let rel_vec = vec![
-///     RelLink::new( "foo","foo", HttpMethod::Get),
-///     RelLink::new( "bar","bar", HttpMethod::Get)
+///     RelLink::new( "foo","foo", HttpMethod::Get, None),
+///     RelLink::new( "bar","bar", HttpMethod::Get, None)
 /// ];
 /// let rlc_check = RelLinkCollection::new(rel_vec);
 ///
 /// let mut rlc = RelLinkCollection::default();
-/// rlc.add(RelLink::new( "foo","foo", HttpMethod::Get));
-/// rlc.add(RelLink::new( "bar","bar", HttpMethod::Get));
+/// rlc.add(RelLink::new( "foo","foo", HttpMethod::Get, None));
+/// rlc.add(RelLink::new( "bar","bar", HttpMethod::Get, None));
 /// ```
 ///
 /// ## Adding new data but data is overwritten
@@ -23,12 +23,12 @@ use crate::RelLink;
 /// use hateoas::{HttpMethod, RelLink, RelLinkCollection};
 ///
 /// let rel_vec = vec![
-///     RelLink::new( "foo","foo", HttpMethod::Get),
-///     RelLink::new( "bar","bar", HttpMethod::Get)
+///     RelLink::new( "foo","foo", HttpMethod::Get, None),
+///     RelLink::new( "bar","bar", HttpMethod::Get, None)
 /// ];
 /// let mut rlc = RelLinkCollection::new(rel_vec);
 ///
-/// let old_rel = rlc.add(RelLink::new( "foo","foo-bar", HttpMethod::Get));
+/// let old_rel = rlc.add(RelLink::new( "foo","foo-bar", HttpMethod::Get, None));
 ///
 /// assert_eq!(old_rel, Some(("foo", "foo", HttpMethod::Get).into()));
 /// ```
@@ -38,8 +38,8 @@ use crate::RelLink;
 /// use hateoas::{HttpMethod, RelLink, RelLinkCollection};
 ///
 /// let rel_vec = vec![
-///     RelLink::new( "foo","foo", HttpMethod::Get),
-///     RelLink::new( "bar","bar", HttpMethod::Get)
+///     RelLink::new( "foo","foo", HttpMethod::Get, None),
+///     RelLink::new( "bar","bar", HttpMethod::Get, None)
 /// ];
 /// let mut rlc = RelLinkCollection::new(rel_vec);
 ///
@@ -53,20 +53,20 @@ use crate::RelLink;
 /// use hateoas::{HttpMethod, RelLink, RelLinkCollection};
 ///
 /// let rel_vec = vec![
-///     RelLink::new( "foo","foo", HttpMethod::Get),
-///     RelLink::new( "bar","bar", HttpMethod::Get)
+///     RelLink::new( "foo","foo", HttpMethod::Get, None),
+///     RelLink::new( "bar","bar", HttpMethod::Get, None)
 /// ];
 /// let mut rlc = RelLinkCollection::new(rel_vec);
 ///
 /// let mut rel = rlc.get_mut("foo");
 ///
-/// assert_eq!(rel, Some(&mut ("foo", "foo", HttpMethod::Get).into()));
+/// assert_eq!(rel, Some(&mut ("foo", "foo", HttpMethod::Get, None).into()));
 ///
-/// rel.map(|t| *t = ("foo-bar", "foo-bar", HttpMethod::Connect).into());
+/// rel.map(|t| *t = ("foo-bar", "foo-bar", HttpMethod::Connect, None).into());
 ///
 /// let updated_rel = rlc.get("foo-bar");
 ///
-/// assert_eq!(updated_rel, Some(&("foo-bar", "foo-bar", HttpMethod::Connect).into()));
+/// assert_eq!(updated_rel, Some(&("foo-bar", "foo-bar", HttpMethod::Connect, None).into()));
 /// ```
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
@@ -95,7 +95,7 @@ impl RelLinkCollection {
     ///
     /// let collection = RelLinkCollection::new(vec![("rel_id", "/rel_path/", HttpMethod::Get).into()]);
     ///
-    /// assert_eq!(collection.get("rel_id"), Some(&RelLink::new("rel_id", "/rel_path/", HttpMethod::Get)));
+    /// assert_eq!(collection.get("rel_id"), Some(&RelLink::new("rel_id", "/rel_path/", HttpMethod::Get, None)));
     /// ```
     pub fn get(&self, rel: &str) -> Option<&RelLink> {
         self.0.iter().find(|rl| rl.rel == rel)
@@ -107,11 +107,11 @@ impl RelLinkCollection {
     /// ```
     /// use hateoas::{RelLinkCollection, HttpMethod, RelLink};
     ///
-    /// let mut collection = RelLinkCollection::new(vec![("rel_id", "/rel_path/", HttpMethod::Get).into()]);
+    /// let mut collection = RelLinkCollection::new(vec![("rel_id", "/rel_path/", HttpMethod::Get, None).into()]);
     /// let mut rel_from_collection = collection.get_mut("rel_id");
-    /// rel_from_collection.map(|t| *t = RelLink::new("rel_id_2", "/rel_path_2/", HttpMethod::Connect));
+    /// rel_from_collection.map(|t| *t = RelLink::new("rel_id_2", "/rel_path_2/", HttpMethod::Connect, None));
     ///
-    /// assert_eq!(collection.get("rel_id_2"), Some(&RelLink::new("rel_id_2", "/rel_path_2/", HttpMethod::Connect)));
+    /// assert_eq!(collection.get("rel_id_2"), Some(&RelLink::new("rel_id_2", "/rel_path_2/", HttpMethod::Connect, None)));
     /// ```
     pub fn get_mut(&mut self, rel: &str) -> Option<&mut RelLink> {
         self.0.iter_mut().find(|rl| rl.rel == rel)
@@ -141,8 +141,8 @@ impl RelLinkCollection {
     /// let mut collection = RelLinkCollection::new(vec![("rel_id", "/rel_path/", HttpMethod::Get).into()]);
     /// let old_data = collection.add(("rel_id", "/rel_path_2/", HttpMethod::Connect));
     ///
-    /// assert_eq!(old_data, Some(RelLink::new("rel_id", "/rel_path/", HttpMethod::Get)));
-    /// assert_eq!(collection.get("rel_id"), Some(&RelLink::new("rel_id", "/rel_path_2/", HttpMethod::Connect)));
+    /// assert_eq!(old_data, Some(RelLink::new("rel_id", "/rel_path/", HttpMethod::Get, None)));
+    /// assert_eq!(collection.get("rel_id"), Some(&RelLink::new("rel_id", "/rel_path_2/", HttpMethod::Connect, None)));
     /// ```
     pub fn add<I: Into<RelLink>>(&mut self, rel: I) -> Option<RelLink> {
         let new_link: RelLink = rel.into();

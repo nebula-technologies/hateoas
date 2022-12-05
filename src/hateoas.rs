@@ -24,7 +24,6 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     ///
     /// ```
     /// use hateoas::Hateoas;
-    /// use hateoas::HateoasData;
     ///
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
@@ -53,7 +52,6 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// This will return the kind of the resource requested.
     /// ```
     /// use hateoas::Hateoas;
-    /// use hateoas::HateoasData;
     ///
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
@@ -71,7 +69,6 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// multiple versions on the system.
     /// ```
     /// use hateoas::Hateoas;
-    /// use hateoas::HateoasData;
     ///
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
@@ -90,7 +87,6 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// property with the metadata object.
     /// ```
     /// use hateoas::Hateoas;
-    /// use hateoas::HateoasData;
     ///
     /// let hateoas: Hateoas<()> = Hateoas::default();
     /// let metadata = hateoas.metadata();
@@ -107,7 +103,6 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// By default metadata is not initialized and will be initialized upon usage.
     /// ```
     /// use hateoas::{Hateoas, Metadata};
-    /// use hateoas::HateoasData;
     ///
     /// let mut response: Hateoas<()> = Hateoas::default();
     /// let mut metadata = Metadata::default();
@@ -127,7 +122,6 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// property with the status object.
     /// ```
     /// use hateoas::Hateoas;
-    /// use hateoas::HateoasData;
     ///
     /// let hateoas: Hateoas<()> = Hateoas::default();
     /// let status = hateoas.status();
@@ -144,7 +138,6 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// If this is not initialized it will be initialized and returned.
     /// ```
     /// use hateoas::{Hateoas, Status};
-    /// use hateoas::HateoasData;
     ///
     /// let mut response: Hateoas<()> = Hateoas::default();
     ///
@@ -164,7 +157,6 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// property with the spec object.
     /// ```
     /// use hateoas::Hateoas;
-    /// use hateoas::HateoasData;
     ///
     /// let hateoas: Hateoas<()> = Hateoas::default();
     /// let spec = hateoas.spec();
@@ -182,7 +174,6 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     ///
     /// ```
     /// use hateoas::{Content, Hateoas};
-    /// use hateoas::HateoasData;
     ///
     /// let mut response: Hateoas<String> = Hateoas::default();
     ///

@@ -12,12 +12,20 @@ use std::str::{from_utf8, Utf8Error};
 pub struct HeaderValue(HashSet<Bytes>);
 
 impl HeaderValue {
-    pub fn new_with_value<'a, B: Into<Vec<Bytes>>>(values: B) -> Self {
-        let mut inner = HashSet::new();
-        for v in values.into() {
-            inner.insert(v);
+    pub fn new<'a, B: Into<HeaderValue>>() -> Self {
+        Self(HashSet::new())
+    }
+
+    pub fn append<V: Into<HeaderValue>>(&mut self, value: V) {
+        for v in value.into().0 {
+            self.0.insert(v);
         }
-        Self(inner)
+    }
+}
+
+impl Default for HeaderValue {
+    fn default() -> Self {
+        Self(HashSet::new())
     }
 }
 
@@ -98,6 +106,33 @@ impl From<Vec<String>> for HeaderValue {
             set.insert(Bytes::from(i));
         }
         Self(set)
+    }
+}
+impl From<Vec<&str>> for HeaderValue {
+    fn from(t: Vec<&str>) -> Self {
+        let mut set = HashSet::new();
+        for i in t {
+            set.insert(Bytes::from(i.as_bytes().to_vec()));
+        }
+        Self(set)
+    }
+}
+
+impl From<&str> for HeaderValue {
+    fn from(s: &str) -> Self {
+        let mut set = HashSet::new();
+        set.insert(Bytes::from(s.as_bytes().to_vec()));
+        Self(set)
+    }
+}
+impl From<String> for HeaderValue {
+    fn from(s: String) -> Self {
+        s.as_str().into()
+    }
+}
+impl From<Option<()>> for HeaderValue {
+    fn from(s: Option<()>) -> Self {
+        Self::default()
     }
 }
 

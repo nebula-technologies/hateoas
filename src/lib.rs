@@ -1,11 +1,21 @@
-#[macro_use]
-extern crate serde_derive;
 extern crate serde;
+extern crate serde_derive;
+#[macro_use]
+extern crate derive_more;
 #[macro_use]
 extern crate serde_with;
+#[cfg(feature = "actix")]
+extern crate actix_web;
+#[cfg(feature = "axum")]
+extern crate axum;
 extern crate bytes;
+#[cfg(feature = "actix")]
+extern crate futures_core;
+#[cfg(any(feature = "simple_serde", future = "axum"))]
+extern crate simple_serde;
 
 mod content;
+mod frameworks;
 mod hateoas;
 mod header;
 mod http_method;
@@ -16,20 +26,20 @@ mod status;
 
 pub use crate::hateoas::Hateoas;
 pub use content::Content;
+pub use header::{HeaderMap, HeaderValue};
 pub use http_method::HttpMethod;
 pub use metadata::Metadata;
 pub use rel::rel_link::RelLink;
 pub use rel::rel_link_collection::RelLinkCollection;
 pub use resource_trait::{AsHateoasResponse, HateoasResource, ToHateoasResponse};
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 pub use status::Status;
-use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 
-pub struct Payload<T: Serialize + DeserializeOwned>(T);
+pub struct Payload<T>(T);
 
-impl<T: Serialize + DeserializeOwned> Payload<T> {
+impl<T> Payload<T> {
     pub fn new_hateoas<U: Serialize + DeserializeOwned + Default + HateoasResource>(
         spec: Option<Content<U>>,
         metadata: Option<Metadata>,
@@ -43,7 +53,7 @@ impl<T: Serialize + DeserializeOwned> Payload<T> {
     }
 }
 
-impl<T: Serialize + DeserializeOwned> Deref for Payload<T> {
+impl<T> Deref for Payload<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -51,7 +61,7 @@ impl<T: Serialize + DeserializeOwned> Deref for Payload<T> {
     }
 }
 
-impl<T: Serialize + DeserializeOwned> DerefMut for Payload<T> {
+impl<T> DerefMut for Payload<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
