@@ -4,11 +4,11 @@ use std::ops::{Deref, DerefMut};
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-pub struct Content<T: Serialize> {
+pub struct Content<T> {
     content: Option<T>,
     rel: Option<RelLinkCollection>,
 }
-impl<T: Serialize> Content<T> {
+impl<T> Content<T> {
     /// Setting the content on the Content container
     ///
     /// ```
@@ -92,7 +92,7 @@ impl<T: Serialize> Content<T> {
     }
 }
 
-impl<T: Serialize> Default for Content<T> {
+impl<T> Default for Content<T> {
     fn default() -> Self {
         Content {
             content: None,
@@ -101,7 +101,7 @@ impl<T: Serialize> Default for Content<T> {
     }
 }
 
-impl<T: Serialize> Deref for Content<T> {
+impl<T> Deref for Content<T> {
     type Target = Option<T>;
     /// Dereferencing the Internal [T] from the Content object
     /// This allows us to better operate on the content itself and use it without having to extract it.
@@ -118,7 +118,7 @@ impl<T: Serialize> Deref for Content<T> {
     }
 }
 
-impl<T: Serialize> DerefMut for Content<T> {
+impl<T> DerefMut for Content<T> {
     /// Dereferencing the Internal [T] from the Content object
     /// This allows us to better operate on the content itself and use it without having to extract it.
     /// ```
@@ -134,7 +134,7 @@ impl<T: Serialize> DerefMut for Content<T> {
     }
 }
 
-impl<T: Serialize> From<T> for Content<T> {
+impl<T> From<T> for Content<T> {
     /// ## Convert from any type into a content<T> type.
     /// This will simply wrap the `T` in a `Content` allowing for easier manipulation.
     /// ```

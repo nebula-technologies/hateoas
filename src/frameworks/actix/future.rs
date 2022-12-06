@@ -1,9 +1,10 @@
 use crate::frameworks::actix::body::PayloadBody;
 use crate::frameworks::actix::error::ActixError;
 use crate::frameworks::payload_control::PayloadControl;
-use crate::Payload;
+use crate::{Hateoas, HateoasResource};
 use actix_web::HttpRequest;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
@@ -27,13 +28,15 @@ impl<T: DeserializeOwned, O: PayloadControl> PayloadFuture<O, T> {
     }
 }
 
-impl<T: DeserializeOwned, O: PayloadControl> Future for PayloadFuture<O, T> {
-    type Output = Result<Payload<T>, ActixError>;
+impl<T: DeserializeOwned + Serialize + HateoasResource, O: PayloadControl> Future
+    for PayloadFuture<O, T>
+{
+    type Output = Result<Hateoas<T>, Hateoas<()>>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
         let res = match Pin::new(&mut this.fut).poll(cx) {
-            std::task::Poll::Ready(t) => t.map(|t| Payload(t)),
+            std::task::Poll::Ready(t) => t.map(|t| Hateoas::from(t)).map_err(|e| Hateoas::from(e)),
             std::task::Poll::Pending => {
                 return std::task::Poll::Pending;
             }
