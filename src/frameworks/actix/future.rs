@@ -28,19 +28,22 @@ impl<T: DeserializeOwned, O: PayloadControl> PayloadFuture<O, T> {
     }
 }
 
-impl<T: DeserializeOwned + Serialize + HateoasResource, O: PayloadControl> Future
-    for PayloadFuture<O, T>
-{
-    type Output = Result<Hateoas<T>, Hateoas<()>>;
+impl<T: DeserializeOwned + HateoasResource, O: PayloadControl> Future for PayloadFuture<O, T> {
+    type Output = Result<Hateoas<T>, ActixError>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
         let res = match Pin::new(&mut this.fut).poll(cx) {
-            std::task::Poll::Ready(t) => t.map(|t| Hateoas::from(t)).map_err(|e| Hateoas::from(e)),
+            std::task::Poll::Ready(t) => t,
             std::task::Poll::Pending => {
                 return std::task::Poll::Pending;
             }
         };
-        Poll::Ready(res)
+        Poll::Ready(match res {
+            Err(err) => Ok(Hateoas::from(
+                Err(err.into()) as Result<Hateoas<T>, ActixError>
+            )),
+            Ok(data) => Ok(data),
+        })
     }
 }

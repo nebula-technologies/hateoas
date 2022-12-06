@@ -208,7 +208,7 @@ macro_rules! automated_status_codes {
             #[doc = " ```\n" ]
             #[doc = " use hateoas::Status;\n"]
             #[doc = " \n" ]
-            #[doc = concat!(" let status = Status::", stringify!($konst), "();\n") ]
+            #[doc = concat!(" let status = Status::", stringify!($konst), "(None);\n") ]
             #[doc = " \n" ]
             #[doc = concat!(" assert_eq!(status, Status::const_new(Some(", stringify!($phrase), ".to_string()), None, Some(", stringify!($num), "), None));\n") ]
             #[doc = " ``` "]

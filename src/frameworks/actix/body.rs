@@ -1,12 +1,13 @@
 use crate::frameworks::actix::error::ActixError;
 use crate::frameworks::payload_control::PayloadControl;
+use crate::{Hateoas, HateoasResource};
 use actix_web::dev::Payload;
 use actix_web::http::header::CONTENT_LENGTH;
 use actix_web::HttpRequest;
 use bytes::BytesMut;
 use futures_core::Stream as _;
 use serde::de::DeserializeOwned;
-use simple_serde::{ContentType, Decoded, SimpleDecoder};
+use simple_serde::{ContentType, Decoded, Error, SimpleDecoder};
 use std::future::Future;
 use std::marker::PhantomData;
 use std::ops::Deref;
@@ -110,8 +111,8 @@ impl<T: DeserializeOwned, O: PayloadControl> PayloadBody<T, O> {
     }
 }
 
-impl<T: DeserializeOwned, O: PayloadControl> Future for PayloadBody<T, O> {
-    type Output = Result<T, ActixError>;
+impl<T: DeserializeOwned + HateoasResource, O: PayloadControl> Future for PayloadBody<T, O> {
+    type Output = Result<Hateoas<T>, ActixError>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
@@ -145,7 +146,13 @@ impl<T: DeserializeOwned, O: PayloadControl> Future for PayloadBody<T, O> {
                             .to_vec()
                             .as_slice()
                             .decode(content_type.deref())
-                            .map(|d: Decoded<T>| d.into())
+                            .map(|d: Decoded<T>| Hateoas::from(d.into()))
+                            .or_else(|e| {
+                                buf.to_vec()
+                                    .as_slice()
+                                    .decode(content_type.deref())
+                                    .map(|d: Decoded<Hateoas<T>>| d.into())
+                            })
                             .map_err(ActixError::SerializationDeserializationError)?;
                         return Poll::Ready(Ok(json));
                     }

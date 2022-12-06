@@ -6,7 +6,6 @@ use serde::de::DeserializeOwned;
 use serde::Deserialize;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(untagged)]
 pub struct Hateoas<T: HateoasResource> {
     #[serde(rename = "apiVersion")]
     api_version: String,
@@ -29,8 +28,8 @@ impl<T: HateoasResource> Hateoas<T> {
     /// assert_eq!(None, new_hateoas_response.spec());
     /// assert_eq!(None, new_hateoas_response.status());
     /// assert_eq!(None, new_hateoas_response.metadata());
-    /// assert_eq!(Some(&"String".to_string()), new_hateoas_response.kind());
-    /// assert_eq!(Some(&"hateoas.io/0.0.1".to_string()), new_hateoas_response.api_version());
+    /// assert_eq!(&"String".to_string(), new_hateoas_response.kind());
+    /// assert_eq!(&"hateoas.io/0.0.1".to_string(), new_hateoas_response.api_version());
     /// ```
     pub fn new(
         spec: Option<Content<T>>,
@@ -53,7 +52,7 @@ impl<T: HateoasResource> Hateoas<T> {
     ///
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
-    /// assert_eq!(Some(&"String".to_string()), new_hateoas_response.kind());
+    /// assert_eq!(&"String".to_string(), new_hateoas_response.kind());
     /// ```
     pub fn kind(&self) -> &String {
         &self.kind
@@ -67,7 +66,7 @@ impl<T: HateoasResource> Hateoas<T> {
     ///
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
-    /// assert_eq!(Some(&"hateoas.io/0.0.1".to_string()), new_hateoas_response.api_version());
+    /// assert_eq!(&"hateoas.io/0.0.1".to_string(), new_hateoas_response.api_version());
     /// ```
     pub fn api_version(&self) -> &String {
         &self.api_version
@@ -96,7 +95,7 @@ impl<T: HateoasResource> Hateoas<T> {
     /// let mut response: Hateoas<()> = Hateoas::default();
     /// let mut metadata = Metadata::default();
     ///
-    /// assert_eq!(Some(&mut metadata), response.metadata_mut());
+    /// assert_eq!(&mut metadata, response.metadata_mut());
     /// ```
     pub fn metadata_mut(&mut self) -> &mut Metadata {
         self.metadata.get_or_insert(Metadata::default())
@@ -125,7 +124,7 @@ impl<T: HateoasResource> Hateoas<T> {
     /// let mut response: Hateoas<()> = Hateoas::default();
     ///
     /// let mut status = response.status_mut();
-    /// assert_eq!(Some(&mut Status::default()), status)
+    /// assert_eq!(&mut Status::default(), status)
     /// ```
     pub fn status_mut(&mut self) -> &mut Status {
         self.status.get_or_insert(Status::default())
@@ -158,51 +157,14 @@ impl<T: HateoasResource> Hateoas<T> {
     /// // at [Response.spec_mut()] Spec will be initialized and returned.
     ///
     /// let mut spec = response.spec_mut();
-    /// assert_eq!(Some(&mut Content::default()), spec)
+    /// assert_eq!(&mut Content::default(), spec)
     /// ```
     pub fn spec_mut(&mut self) -> &mut Content<T> {
         self.spec.get_or_insert(Content::default())
     }
 }
 
-impl From<ActixError> for Hateoas<()> {
-    fn from(e: ActixError) -> Self {
-        match e {
-            ActixError::OverflowKnownLength { .. } => Hateoas::PAYLOAD_TOO_LARGE(
-                None,
-                Some("Content not matching expected length".to_string()),
-            ),
-            ActixError::Overflow { .. } => {
-                Hateoas::PAYLOAD_TOO_LARGE(None, Some("Payload too large".to_string()))
-            }
-            ActixError::ContentType => {
-                Hateoas::UNPROCESSABLE_ENTITY(None, Some("Unknown content type".to_string()))
-            }
-            ActixError::Deserialize(_) => {
-                Hateoas::UNPROCESSABLE_ENTITY(None, Some("Unknown format".to_string()))
-            }
-            ActixError::Serialize(_) => {
-                Hateoas::UNPROCESSABLE_ENTITY(None, Some("Unknown format".to_string()))
-            }
-            ActixError::Payload(_) => Hateoas::INTERNAL_SERVER_ERROR(None, None),
-            ActixError::PayloadError(_, _) => Hateoas::INTERNAL_SERVER_ERROR(None, None),
-            ActixError::NoPayloadSizeDefinitionInHeader => {
-                Hateoas::INTERNAL_SERVER_ERROR(None, None)
-            }
-            ActixError::FailedToMapHeaderToStr(_) => Hateoas::INTERNAL_SERVER_ERROR(None, None),
-            ActixError::SerializationDeserializationError(_) => {
-                Hateoas::UNPROCESSABLE_ENTITY(None, Some("Unknown format".to_string()))
-            }
-            ActixError::Infallible => Hateoas::INTERNAL_SERVER_ERROR(None, None),
-            ActixError::FailedToParseToInt(_) => Hateoas::INTERNAL_SERVER_ERROR(None, None),
-            ActixError::FailedToGetContentTypeFromHeader => {
-                Hateoas::INTERNAL_SERVER_ERROR(None, None)
-            }
-        }
-    }
-}
-
-impl<T: Serialize + HateoasResource> From<T> for Hateoas<T> {
+impl<T: HateoasResource> From<T> for Hateoas<T> {
     fn from(t: T) -> Self {
         Hateoas::OK(Some(t), None)
     }
@@ -233,9 +195,9 @@ macro_rules! automated_code_hateoas {
             #[doc = " ```\n" ]
             #[doc = " use hateoas::{Hateoas,Content,Status};\n"]
             #[doc = " \n" ]
-            #[doc = concat!(" let hateoas: Hateoas<String> = Hateoas::", stringify!($konst), "(Some(", stringify!($phrase), ".to_string()));\n") ]
+            #[doc = concat!(" let hateoas: Hateoas<String> = Hateoas::", stringify!($konst), "(Some(", stringify!($phrase), ".to_string()), None);\n") ]
             #[doc = " \n" ]
-            #[doc = concat!(" assert_eq!(hateoas, Hateoas::new(Some(Content::new(", stringify!($phrase), ".to_string())), None, Some(Status::", stringify!($konst), "())));\n") ]
+            #[doc = concat!(" assert_eq!(hateoas, Hateoas::new(Some(Content::new(", stringify!($phrase), ".to_string())), None, Some(Status::", stringify!($konst), "(None))));\n") ]
             #[doc = " ``` "]
             #[allow(non_snake_case)]
             pub fn $konst(data: Option<T>, msg: Option<String>) -> Self {
@@ -528,6 +490,6 @@ mod test {
         // at [Response.spec()] Spec will be initialized and returned.
 
         let mut spec = response.spec_mut();
-        assert_eq!(Some(&mut Content::default()), spec)
+        assert_eq!(&mut Content::default(), spec)
     }
 }

@@ -5,7 +5,7 @@ pub mod future;
 use crate::frameworks::actix::error::ActixError;
 use crate::frameworks::actix::future::PayloadFuture;
 use crate::frameworks::payload_control::PayloadControl;
-use crate::{Hateoas, HateoasResource, Payload};
+use crate::{Hateoas, HateoasResource};
 use actix_web::body::BoxBody;
 use actix_web::http::StatusCode;
 use actix_web::{FromRequest, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
@@ -57,6 +57,60 @@ impl<T: Serialize + HateoasResource> Responder for Hateoas<T> {
     }
 }
 
+impl<T: HateoasResource> From<ActixError> for Hateoas<T> {
+    fn from(e: ActixError) -> Self {
+        match e {
+            ActixError::OverflowKnownLength { .. } => Hateoas::PAYLOAD_TOO_LARGE(
+                None,
+                Some("Content not matching expected length".to_string()),
+            ),
+            ActixError::Overflow { .. } => {
+                Hateoas::PAYLOAD_TOO_LARGE(None, Some("Payload too large".to_string()))
+            }
+            ActixError::ContentType => {
+                Hateoas::UNPROCESSABLE_ENTITY(None, Some("Unknown content type".to_string()))
+            }
+            ActixError::Deserialize(_) => {
+                Hateoas::UNPROCESSABLE_ENTITY(None, Some("Unknown format".to_string()))
+            }
+            ActixError::Serialize(_) => {
+                Hateoas::UNPROCESSABLE_ENTITY(None, Some("Unknown format".to_string()))
+            }
+            ActixError::Payload(_) => Hateoas::INTERNAL_SERVER_ERROR(None, None),
+            ActixError::PayloadError(_, _) => Hateoas::INTERNAL_SERVER_ERROR(None, None),
+            ActixError::NoPayloadSizeDefinitionInHeader => {
+                Hateoas::INTERNAL_SERVER_ERROR(None, None)
+            }
+            ActixError::FailedToMapHeaderToStr(_) => Hateoas::INTERNAL_SERVER_ERROR(None, None),
+            ActixError::SerializationDeserializationError(_) => {
+                Hateoas::UNPROCESSABLE_ENTITY(None, Some("Unknown format".to_string()))
+            }
+            ActixError::Infallible => Hateoas::INTERNAL_SERVER_ERROR(None, None),
+            ActixError::FailedToParseToInt(_) => Hateoas::INTERNAL_SERVER_ERROR(None, None),
+            ActixError::FailedToGetContentTypeFromHeader => {
+                Hateoas::INTERNAL_SERVER_ERROR(None, None)
+            }
+        }
+    }
+}
+
+impl<T: HateoasResource> From<Result<T, ActixError>> for Hateoas<T> {
+    fn from(t: Result<T, ActixError>) -> Self {
+        match t {
+            Ok(t) => t.into(),
+            Err(e) => e.into(),
+        }
+    }
+}
+impl<T: HateoasResource> From<Result<Hateoas<T>, ActixError>> for Hateoas<T> {
+    fn from(t: Result<Hateoas<T>, ActixError>) -> Self {
+        match t {
+            Ok(t) => t,
+            Err(e) => e.into(),
+        }
+    }
+}
+
 // impl<T, E: DebuggableAny> From<Result<T, E>> for Payload<T> {
 //     fn from(r: Result<T, E>) -> Self {
 //         let message = if let Err(e) = &r {
@@ -81,7 +135,6 @@ impl<T: Serialize + HateoasResource> Responder for Hateoas<T> {
 
 #[cfg(test)]
 mod test {
-    use crate::hateoas::prelude;
     use crate::hateoas::Hateoas;
     use actix_web::{http::header, test, web, App};
     use serde_json;
@@ -118,13 +171,11 @@ mod test {
 
     #[actix_web::test]
     async fn test_hateoas_string() {
-        let app = test::init_service(
-            App::new().service(
-                web::resource("/index.html")
-                    .route(web::post().to(|| async { Hateoas::OK(Some("welcome!".to_string())) })),
-            ),
-        )
-        .await;
+        let app =
+            test::init_service(App::new().service(web::resource("/index.html").route(
+                web::post().to(|| async { Hateoas::OK(Some("welcome!".to_string()), None) }),
+            )))
+            .await;
 
         let req = test::TestRequest::post()
             .uri("/index.html")
@@ -138,20 +189,18 @@ mod test {
         println!("{}", raw_str);
         let content = serde_json::from_str::<Hateoas<String>>(raw_str).unwrap();
         println!("{:#?}", content);
-        assert_eq!(content, Hateoas::OK(Some("welcome!".to_string())));
+        assert_eq!(content, Hateoas::OK(Some("welcome!".to_string()), None));
     }
 
     #[actix_web::test]
     async fn test_hateoas_rubber_bullet() {
-        let response = Hateoas::OK(Some(RubberBullet::default()));
+        let response = Hateoas::OK(Some(RubberBullet::default()), None);
 
-        let app = test::init_service(
-            App::new()
-                .service(web::resource("/index.html").route(
-                    web::post().to(|| async { Hateoas::OK(Some(RubberBullet::default())) }),
-                )),
-        )
-        .await;
+        let app =
+            test::init_service(App::new().service(web::resource("/index.html").route(
+                web::post().to(|| async { Hateoas::OK(Some(RubberBullet::default()), None) }),
+            )))
+            .await;
 
         let req = test::TestRequest::post()
             .uri("/index.html")
@@ -170,14 +219,14 @@ mod test {
 
     #[actix_web::test]
     async fn test_for_automated_impl_hateoas() {
-        let rickhateoas: Hateoas<String> = Hateoas::OK(Some("test".to_string()));
+        let rickhateoas: Hateoas<String> = Hateoas::OK(Some("test".to_string()), None);
 
         assert_eq!(
             rickhateoas,
             crate::Hateoas::new(
                 Some(crate::Content::new("test".to_string())),
                 None,
-                Some(crate::Status::OK())
+                Some(crate::Status::OK(None))
             )
         );
     }
