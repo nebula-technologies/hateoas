@@ -1,6 +1,5 @@
 use crate::header::HeaderValue;
-use bytes::Bytes;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

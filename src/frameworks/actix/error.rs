@@ -1,5 +1,6 @@
 use actix_web::error::PayloadError;
 use actix_web::http::header::ToStrError;
+use actix_web::ResponseError;
 
 #[derive(Debug, Display)]
 #[non_exhaustive]
@@ -58,6 +59,8 @@ pub enum ActixError {
     #[display(fmt = "Failed to get Content-Type from header")]
     FailedToGetContentTypeFromHeader,
 }
+
+impl ResponseError for ActixError {}
 
 impl From<ToStrError> for ActixError {
     fn from(e: ToStrError) -> Self {

@@ -1,7 +1,6 @@
 use crate::frameworks::actix::error::ActixError;
 use crate::frameworks::payload_control::PayloadControl;
 use actix_web::dev::Payload;
-use actix_web::error::PayloadError;
 use actix_web::http::header::CONTENT_LENGTH;
 use actix_web::HttpRequest;
 use bytes::BytesMut;

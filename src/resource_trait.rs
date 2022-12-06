@@ -1,5 +1,4 @@
 use crate::Hateoas;
-use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::collections::HashMap;
 

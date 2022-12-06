@@ -1,7 +1,6 @@
 use crate::resource_trait::HateoasResource;
 use crate::serde::Serialize;
 use crate::{Content, Metadata, Status};
-use serde::de::DeserializeOwned;
 use serde::Deserialize;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]

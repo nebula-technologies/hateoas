@@ -1,6 +1,5 @@
 use crate::serde::Serialize;
 use crate::RelLinkCollection;
-use serde::de::DeserializeOwned;
 use std::ops::{Deref, DerefMut};
 
 #[skip_serializing_none]
