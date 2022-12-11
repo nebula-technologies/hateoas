@@ -123,6 +123,16 @@ impl From<Option<()>> for HeaderMap {
     }
 }
 
+impl From<http::HeaderMap> for HeaderMap {
+    fn from(t: http::HeaderMap) -> Self {
+        let mut headers = Self::default();
+        for (Some(key), value) in t {
+            headers.insert(key.to_string(), value.into());
+        }
+        headers
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::HeaderMap;

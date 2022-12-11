@@ -1,3 +1,5 @@
+use crate::HeaderMap;
+
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct Status {
@@ -5,6 +7,7 @@ pub struct Status {
     pub(crate) code: Option<u32>,
     pub(crate) http_status_code: Option<u16>,
     pub(crate) session: Option<uuid::Uuid>,
+    pub(crate) headers: Option<HeaderMap>,
 }
 
 impl Status {
@@ -13,12 +16,14 @@ impl Status {
         code: Option<u32>,
         http_status_code: Option<u16>,
         session: Option<uuid::Uuid>,
+        headers: Option<HeaderMap>,
     ) -> Self {
         Status {
             message: message.map(|t| t.to_string()),
             code,
             http_status_code,
             session,
+            headers,
         }
     }
 
@@ -27,12 +32,14 @@ impl Status {
         code: Option<u32>,
         http_status_code: Option<u16>,
         session: Option<uuid::Uuid>,
+        headers: Option<HeaderMap>,
     ) -> Self {
         Status {
             message,
             code,
             http_status_code,
             session,
+            headers,
         }
     }
 
@@ -42,7 +49,7 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::new(Some("hello world"), None, None, None);
+    /// let mut status = Status::new(Some("hello world"), None, None, None, None);
     ///
     /// assert_eq!(status.message(), &Some("hello world".to_string()));
     /// ```
@@ -56,7 +63,7 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::new(Some("hello world"), None, None, None);
+    /// let mut status = Status::new(Some("hello world"), None, None, None, None);
     ///
     /// let mut mut_message = status.message_mut();
     /// *mut_message = Some("Hello Space".to_string());
@@ -73,7 +80,7 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::new(None, Some(200), None, None);
+    /// let mut status = Status::new(None, Some(200), None, None, None);
     ///
     /// assert_eq!(status.code(), &Some(200));
     /// ```
@@ -88,7 +95,7 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::new(None, Some(200), None, None);
+    /// let mut status = Status::new(None, Some(200), None, None, None);
     ///
     /// let mut status_code = status.code_mut();
     /// *status_code = Some(100);
@@ -105,7 +112,7 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::new(None, None, Some(200), None);
+    /// let mut status = Status::new(None, None, Some(200), None, None);
     ///
     /// assert_eq!(status.http_status_code(), &Some(200));
     /// ```
@@ -119,7 +126,7 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::new(None, None, Some(200), None);
+    /// let mut status = Status::new(None, None, Some(200), None, None);
     ///
     /// let mut http_code = status.http_status_code_mut();
     /// *http_code = Some(100);
@@ -136,7 +143,7 @@ impl Status {
     /// use hateoas::Status;
     ///
     /// let uuid = uuid::Uuid::new_v4();
-    /// let mut status = Status::new(None, None, None, Some(uuid));
+    /// let mut status = Status::new(None, None, None, Some(uuid), None);
     ///
     /// assert_eq!(status.session(), &Some(uuid));
     /// ```
@@ -210,7 +217,7 @@ macro_rules! automated_status_codes {
             #[doc = " \n" ]
             #[doc = concat!(" let status = Status::", stringify!($konst), "(None);\n") ]
             #[doc = " \n" ]
-            #[doc = concat!(" assert_eq!(status, Status::const_new(Some(", stringify!($phrase), ".to_string()), None, Some(", stringify!($num), "), None));\n") ]
+            #[doc = concat!(" assert_eq!(status, Status::const_new(Some(", stringify!($phrase), ".to_string()), None, Some(", stringify!($num), "), None, None));\n") ]
             #[doc = " ``` "]
             #[allow(non_snake_case)]
              pub fn $konst(msg: Option<String>) -> Self {
@@ -218,6 +225,7 @@ macro_rules! automated_status_codes {
                     msg.or_else(|| Some($phrase.to_string())),
                     None,
                     Some($num),
+                    None,
                     None
                 )
             }

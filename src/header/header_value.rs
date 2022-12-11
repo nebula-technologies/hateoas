@@ -146,6 +146,14 @@ impl TryFrom<&HeaderValue> for Vec<String> {
     }
 }
 
+impl From<http::HeaderValue> for HeaderValue {
+    fn from(t: http::HeaderValue) -> Self {
+        let mut values = HeaderValue::default();
+        values.insert(Bytes::from(t.as_bytes()));
+        values
+    }
+}
+
 impl Deref for HeaderValue {
     type Target = HashSet<Bytes>;
 

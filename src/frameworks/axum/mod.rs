@@ -35,8 +35,9 @@ where
         Self: 'b,
     {
         Box::pin(async move {
-            req.headers()
+            req.headers();
 
-            Ok(Hateoas::OK(None, None)) })
+            Ok(Hateoas::OK(None, None))
+        })
     }
 }
