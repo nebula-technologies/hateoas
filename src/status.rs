@@ -7,7 +7,7 @@ pub struct Status {
     pub(crate) code: Option<u32>,
     pub(crate) http_status_code: Option<u16>,
     pub(crate) session: Option<uuid::Uuid>,
-    pub(crate) headers: Option<HeaderMap>,
+    pub(crate) header: Option<HeaderMap>,
 }
 
 impl Status {
@@ -23,7 +23,7 @@ impl Status {
             code,
             http_status_code,
             session,
-            headers,
+            header: headers,
         }
     }
 
@@ -39,7 +39,7 @@ impl Status {
             code,
             http_status_code,
             session,
-            headers,
+            header: headers,
         }
     }
 
@@ -167,6 +167,47 @@ impl Status {
     /// ```
     pub fn session_mut(&mut self) -> &mut Option<uuid::Uuid> {
         &mut self.session
+    }
+    /// ## Getter for the headers
+    ///
+    /// ```
+    /// use hateoas::Status;
+    ///
+    /// let uuid = uuid::Uuid::new_v4();
+    /// let mut status = Status::new(None, None, None, Some(uuid), None);
+    ///
+    /// assert_eq!(status.headers(), &None);
+    /// ```
+    pub fn headers(&self) -> &Option<HeaderMap> {
+        &self.header
+    }
+
+    /// ## Getter for mutable headers
+    ///
+    /// ```
+    /// use hateoas::{HeaderMap, Status};
+    ///
+    /// let uuid = uuid::Uuid::new_v4();
+    /// let mut status = Status::default();
+    ///
+    /// status
+    ///     .headers_mut()
+    ///     .get_or_insert(Default::default())
+    ///     .append("test", uuid.to_string());
+    /// status
+    ///     .headers_mut()
+    ///     .as_mut()
+    ///     .map(|t| t.append("test2", uuid.to_string()));
+    ///
+    /// let test_headers: HeaderMap = vec![
+    ///     ("test", uuid.to_string().as_str()),
+    ///     ("test2", uuid.to_string().as_str()),
+    /// ]
+    /// .into();
+    /// assert_eq!(status.headers(), &Some(test_headers));
+    /// ```
+    pub fn headers_mut(&mut self) -> &mut Option<HeaderMap> {
+        &mut self.header
     }
 
     pub fn get(
@@ -426,4 +467,39 @@ automated_status_codes! {
     /// 511 Network Authentication Required
     /// [[RFC6585](https://tools.ietf.org/html/rfc6585)]
     (511, NETWORK_AUTHENTICATION_REQUIRED, "Network Authentication Required");
+}
+
+#[cfg(test)]
+pub mod test {
+    use crate::{HeaderMap, Metadata, Status};
+
+    #[test]
+    pub fn test_headers_mut() {
+        let uuid = uuid::Uuid::new_v4();
+        let mut status = Status::default();
+
+        status
+            .headers_mut()
+            .get_or_insert(Default::default())
+            .append("test", uuid.to_string());
+        status
+            .headers_mut()
+            .as_mut()
+            .map(|t| t.append("test2", uuid.to_string()));
+
+        let test_headers: HeaderMap = vec![
+            ("test", uuid.to_string().as_str()),
+            ("test2", uuid.to_string().as_str()),
+        ]
+        .into();
+        assert_eq!(status.headers(), &Some(test_headers));
+    }
+
+    #[test]
+    pub fn test_headers() {
+        let uuid = uuid::Uuid::new_v4();
+        let mut status = Status::new(None, None, None, Some(uuid), None);
+
+        assert_eq!(status.headers(), &None);
+    }
 }

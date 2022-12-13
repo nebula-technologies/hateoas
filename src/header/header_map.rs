@@ -1,5 +1,8 @@
-use crate::header::HeaderValue;
-use std::collections::HashMap;
+use crate::header::{HeaderValue, COMMON_HEADERS};
+use bytes::Bytes;
+use std::borrow::Borrow;
+use std::collections::{HashMap, HashSet};
+use std::hash::Hash;
 use std::ops::{Deref, DerefMut};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -45,6 +48,43 @@ impl HeaderMap {
             self.0.insert(key.to_string(), value.into());
         }
         self
+    }
+
+    pub fn get_first<Q: ?Sized>(&self, key: &Q) -> Option<&Bytes>
+    where
+        String: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        self.0.get(key).and_then(|v| v.iter().next())
+    }
+
+    pub fn common_extract(&self) -> Self {
+        self.extract(COMMON_HEADERS.clone())
+    }
+
+    pub fn uncommon_extract(&self) -> Self {
+        self.inverse_extract(COMMON_HEADERS.clone())
+    }
+
+    pub fn extract<H: Into<HashSet<String>>>(&self, extract: H) -> Self {
+        let converted_extract = extract.into();
+        let mut extract_headers = HeaderMap::new();
+        for (key, value) in &self.0 {
+            if converted_extract.contains(key.as_str()) {
+                extract_headers.append(key, value.clone());
+            }
+        }
+        extract_headers
+    }
+    pub fn inverse_extract<H: Into<HashSet<String>>>(&self, extract: H) -> Self {
+        let converted_extract = extract.into();
+        let mut inv_extract_headers = HeaderMap::new();
+        for (key, value) in &self.0 {
+            if !converted_extract.contains(key.as_str()) {
+                inv_extract_headers.append(key, value.clone());
+            }
+        }
+        inv_extract_headers
     }
 }
 
@@ -126,7 +166,19 @@ impl From<Option<()>> for HeaderMap {
 impl From<http::HeaderMap> for HeaderMap {
     fn from(t: http::HeaderMap) -> Self {
         let mut headers = Self::default();
-        for (Some(key), value) in t {
+        for (opt_key, value) in t {
+            if let Some(key) = opt_key {
+                headers.insert(key.to_string(), value.into());
+            }
+        }
+        headers
+    }
+}
+
+impl From<&http::HeaderMap> for HeaderMap {
+    fn from(t: &http::HeaderMap) -> Self {
+        let mut headers = Self::default();
+        for (key, value) in t {
             headers.insert(key.to_string(), value.into());
         }
         headers

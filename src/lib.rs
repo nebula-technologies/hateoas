@@ -1,4 +1,5 @@
 extern crate serde;
+extern crate tracing;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
@@ -12,6 +13,8 @@ extern crate axum;
 extern crate bytes;
 #[cfg(feature = "actix")]
 extern crate futures_core;
+#[macro_use]
+extern crate lazy_static;
 #[cfg(any(feature = "simple_serde", future = "axum"))]
 extern crate simple_serde;
 
@@ -33,7 +36,4 @@ pub use metadata::Metadata;
 pub use rel::rel_link::RelLink;
 pub use rel::rel_link_collection::RelLinkCollection;
 pub use resource_trait::{AsHateoasResponse, HateoasResource, ToHateoasResponse};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 pub use status::Status;
-use std::ops::{Deref, DerefMut};

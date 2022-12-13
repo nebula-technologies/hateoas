@@ -7,7 +7,7 @@ use actix_web::HttpRequest;
 use bytes::BytesMut;
 use futures_core::Stream as _;
 use serde::de::DeserializeOwned;
-use simple_serde::{ContentType, Decoded, Error, SimpleDecoder};
+use simple_serde::{ContentType, Decoded, SimpleDecoder};
 use std::future::Future;
 use std::marker::PhantomData;
 use std::ops::Deref;
@@ -147,7 +147,7 @@ impl<T: DeserializeOwned + HateoasResource, O: PayloadControl> Future for Payloa
                             .as_slice()
                             .decode(content_type.deref())
                             .map(|d: Decoded<T>| Hateoas::from(d.into()))
-                            .or_else(|e| {
+                            .or_else(|_e| {
                                 buf.to_vec()
                                     .as_slice()
                                     .decode(content_type.deref())

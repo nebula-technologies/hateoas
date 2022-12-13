@@ -4,7 +4,6 @@ use crate::frameworks::payload_control::PayloadControl;
 use crate::{Hateoas, HateoasResource};
 use actix_web::HttpRequest;
 use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;

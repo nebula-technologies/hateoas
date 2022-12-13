@@ -94,7 +94,7 @@ impl Serialize for HeaderValue {
     {
         let vec: Vec<String> = self
             .try_into()
-            .map_err(|e| S::Error::custom("Unknown character type"))?;
+            .map_err(|e| S::Error::custom(format!("Unknown character type: {}", e)))?;
         Serializer::serialize_newtype_struct(serializer, "HeaderValue", &vec)
     }
 }
@@ -131,7 +131,7 @@ impl From<String> for HeaderValue {
     }
 }
 impl From<Option<()>> for HeaderValue {
-    fn from(s: Option<()>) -> Self {
+    fn from(_: Option<()>) -> Self {
         Self::default()
     }
 }
@@ -149,7 +149,15 @@ impl TryFrom<&HeaderValue> for Vec<String> {
 impl From<http::HeaderValue> for HeaderValue {
     fn from(t: http::HeaderValue) -> Self {
         let mut values = HeaderValue::default();
-        values.insert(Bytes::from(t.as_bytes()));
+        values.insert(Bytes::from(t.as_bytes().to_vec()));
+        values
+    }
+}
+
+impl From<&http::HeaderValue> for HeaderValue {
+    fn from(t: &http::HeaderValue) -> Self {
+        let mut values = HeaderValue::default();
+        values.insert(Bytes::from(t.as_bytes().to_vec()));
         values
     }
 }
