@@ -21,6 +21,13 @@ impl HeaderValue {
             self.0.insert(v);
         }
     }
+
+    pub fn to_vec(&self) -> Vec<u8> {
+        self.iter()
+            .map(|t| t.to_vec())
+            .flatten()
+            .collect::<Vec<u8>>()
+    }
 }
 
 impl Default for HeaderValue {
@@ -173,5 +180,23 @@ impl Deref for HeaderValue {
 impl DerefMut for HeaderValue {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl ToString for HeaderValue {
+    fn to_string(&self) -> String {
+        self.0
+            .iter()
+            .map(|t| String::from_utf8(t.to_vec()).ok())
+            .collect::<Option<Vec<String>>>()
+            .map(|t| t.join(""))
+            .unwrap_or("".to_string())
+    }
+}
+
+impl TryFrom<&HeaderValue> for http::HeaderValue {
+    type Error = String;
+    fn try_from(t: &HeaderValue) -> Result<Self, Self::Error> {
+        Self::from_bytes(t.to_vec().as_slice()).map_err(|e| e.to_string())
     }
 }

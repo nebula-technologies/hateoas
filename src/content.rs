@@ -3,7 +3,7 @@ use crate::RelLinkCollection;
 use std::ops::{Deref, DerefMut};
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Content<T> {
     content: Option<T>,
     rel: Option<RelLinkCollection>,

@@ -1,9 +1,11 @@
 use crate::header::{HeaderValue, COMMON_HEADERS};
 use bytes::Bytes;
+use http::header::{HeaderName, IntoHeaderName};
 use std::borrow::Borrow;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::ops::{Deref, DerefMut};
+use std::str::FromStr;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct HeaderMap(HashMap<String, HeaderValue>);
@@ -182,6 +184,25 @@ impl From<&http::HeaderMap> for HeaderMap {
             headers.insert(key.to_string(), value.into());
         }
         headers
+    }
+}
+
+impl TryFrom<HeaderMap> for http::HeaderMap {
+    type Error = String;
+    fn try_from(h: HeaderMap) -> Result<Self, Self::Error> {
+        let mut headers = Self::default();
+        for (key, value) in h.0 {
+            let header_value_res = http::HeaderValue::try_from(&value);
+            let name_res = HeaderName::from_str(key.as_str());
+            match (header_value_res, name_res) {
+                (Ok(v), Ok(n)) => {
+                    headers.append(n, v);
+                }
+                (Err(e), _) => return Err(e),
+                (_, Err(e)) => return Err(e.to_string()),
+            }
+        }
+        Ok(headers)
     }
 }
 

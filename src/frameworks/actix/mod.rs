@@ -15,7 +15,7 @@ use simple_serde::{ContentType, SimpleEncoder};
 
 impl<T> FromRequest for Hateoas<T>
 where
-    T: DeserializeOwned + PayloadControl + HateoasResource,
+    T: DeserializeOwned + PayloadControl + HateoasResource + Clone,
 {
     type Error = ActixError;
     type Future = PayloadFuture<T, T>;
@@ -26,7 +26,10 @@ where
     }
 }
 
-impl<T: Serialize + HateoasResource> Responder for Hateoas<T> {
+impl<T> Responder for Hateoas<T>
+where
+    T: HateoasResource + Serialize + Clone,
+{
     type Body = BoxBody;
 
     fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
@@ -57,7 +60,10 @@ impl<T: Serialize + HateoasResource> Responder for Hateoas<T> {
     }
 }
 
-impl<T: HateoasResource> From<ActixError> for Hateoas<T> {
+impl<T> From<ActixError> for Hateoas<T>
+where
+    T: HateoasResource + Clone,
+{
     fn from(e: ActixError) -> Self {
         match e {
             ActixError::OverflowKnownLength { .. } => Hateoas::PAYLOAD_TOO_LARGE(
@@ -94,7 +100,10 @@ impl<T: HateoasResource> From<ActixError> for Hateoas<T> {
     }
 }
 
-impl<T: HateoasResource> From<Result<T, ActixError>> for Hateoas<T> {
+impl<T> From<Result<T, ActixError>> for Hateoas<T>
+where
+    T: HateoasResource + Clone,
+{
     fn from(t: Result<T, ActixError>) -> Self {
         match t {
             Ok(t) => t.into(),
@@ -102,7 +111,10 @@ impl<T: HateoasResource> From<Result<T, ActixError>> for Hateoas<T> {
         }
     }
 }
-impl<T: HateoasResource> From<Result<Hateoas<T>, ActixError>> for Hateoas<T> {
+impl<T> From<Result<Hateoas<T>, ActixError>> for Hateoas<T>
+where
+    T: HateoasResource + Clone,
+{
     fn from(t: Result<Hateoas<T>, ActixError>) -> Self {
         match t {
             Ok(t) => t,
@@ -140,7 +152,7 @@ mod test {
     use serde_json;
     use std::ops::Deref;
 
-    #[derive(Serialize, Deserialize, Debug, PartialEq)]
+    #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
     pub struct RubberBullet {
         pub name: String,
         pub title: String,

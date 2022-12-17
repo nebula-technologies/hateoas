@@ -1,3 +1,4 @@
+use crate::HeaderMap;
 use std::any::Any;
 use std::fmt::Debug;
 

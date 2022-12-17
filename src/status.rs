@@ -1,27 +1,27 @@
-use crate::HeaderMap;
+use crate::{HeaderMap, StatusCode};
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default, Clone)]
 pub struct Status {
     pub(crate) message: Option<String>,
     pub(crate) code: Option<u32>,
-    pub(crate) http_status_code: Option<u16>,
+    pub(crate) http_status_code: Option<StatusCode>,
     pub(crate) session: Option<uuid::Uuid>,
     pub(crate) header: Option<HeaderMap>,
 }
 
 impl Status {
-    pub fn new(
+    pub fn new<S: Into<StatusCode>>(
         message: Option<&str>,
         code: Option<u32>,
-        http_status_code: Option<u16>,
+        http_status_code: Option<S>,
         session: Option<uuid::Uuid>,
         headers: Option<HeaderMap>,
     ) -> Self {
         Status {
             message: message.map(|t| t.to_string()),
             code,
-            http_status_code,
+            http_status_code: http_status_code.map(|t| t.into()),
             session,
             header: headers,
         }
@@ -30,7 +30,7 @@ impl Status {
     pub const fn const_new(
         message: Option<String>,
         code: Option<u32>,
-        http_status_code: Option<u16>,
+        http_status_code: Option<StatusCode>,
         session: Option<uuid::Uuid>,
         headers: Option<HeaderMap>,
     ) -> Self {
@@ -49,7 +49,7 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::new(Some("hello world"), None, None, None, None);
+    /// let mut status = Status::new(Some("hello world"), None, None as Option<u16>, None, None);
     ///
     /// assert_eq!(status.message(), &Some("hello world".to_string()));
     /// ```
@@ -63,7 +63,7 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::new(Some("hello world"), None, None, None, None);
+    /// let mut status = Status::new(Some("hello world"), None, None as Option<u16>, None, None);
     ///
     /// let mut mut_message = status.message_mut();
     /// *mut_message = Some("Hello Space".to_string());
@@ -80,7 +80,7 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::new(None, Some(200), None, None, None);
+    /// let mut status = Status::new(None, Some(200), None as Option<u16>, None, None);
     ///
     /// assert_eq!(status.code(), &Some(200));
     /// ```
@@ -95,7 +95,7 @@ impl Status {
     /// ```
     /// use hateoas::Status;
     ///
-    /// let mut status = Status::new(None, Some(200), None, None, None);
+    /// let mut status = Status::new(None, Some(200), None as Option<u16>, None, None);
     ///
     /// let mut status_code = status.code_mut();
     /// *status_code = Some(100);
@@ -114,9 +114,9 @@ impl Status {
     ///
     /// let mut status = Status::new(None, None, Some(200), None, None);
     ///
-    /// assert_eq!(status.http_status_code(), &Some(200));
+    /// assert_eq!(status.http_status_code(), &Some(200.into()));
     /// ```
-    pub fn http_status_code(&self) -> &Option<u16> {
+    pub fn http_status_code(&self) -> &Option<StatusCode> {
         &self.http_status_code
     }
 
@@ -124,16 +124,16 @@ impl Status {
     /// This is for getting the http_status_code.
     ///
     /// ```
-    /// use hateoas::Status;
+    /// use hateoas::{Status, StatusCode};
     ///
     /// let mut status = Status::new(None, None, Some(200), None, None);
     ///
     /// let mut http_code = status.http_status_code_mut();
-    /// *http_code = Some(100);
+    /// *http_code = Some(StatusCode::from(100));
     ///
-    /// assert_eq!(status.http_status_code(), &Some(100));
+    /// assert_eq!(status.http_status_code(), &Some(100.into()));
     /// ```
-    pub fn http_status_code_mut(&mut self) -> &mut Option<u16> {
+    pub fn http_status_code_mut(&mut self) -> &mut Option<StatusCode> {
         &mut self.http_status_code
     }
 
@@ -143,7 +143,7 @@ impl Status {
     /// use hateoas::Status;
     ///
     /// let uuid = uuid::Uuid::new_v4();
-    /// let mut status = Status::new(None, None, None, Some(uuid), None);
+    /// let mut status = Status::new(None, None, None as Option<u16>, Some(uuid), None);
     ///
     /// assert_eq!(status.session(), &Some(uuid));
     /// ```
@@ -174,7 +174,7 @@ impl Status {
     /// use hateoas::Status;
     ///
     /// let uuid = uuid::Uuid::new_v4();
-    /// let mut status = Status::new(None, None, None, Some(uuid), None);
+    /// let mut status = Status::new(None, None, None as Option<u16>, Some(uuid), None);
     ///
     /// assert_eq!(status.headers(), &None);
     /// ```
@@ -215,7 +215,7 @@ impl Status {
     ) -> (
         &Option<String>,
         &Option<u32>,
-        &Option<u16>,
+        &Option<StatusCode>,
         &Option<uuid::Uuid>,
     ) {
         (
@@ -231,7 +231,7 @@ impl Status {
     ) -> (
         &mut Option<String>,
         &mut Option<u32>,
-        &mut Option<u16>,
+        &mut Option<StatusCode>,
         &mut Option<uuid::Uuid>,
     ) {
         (
@@ -258,14 +258,14 @@ macro_rules! automated_status_codes {
             #[doc = " \n" ]
             #[doc = concat!(" let status = Status::", stringify!($konst), "(None);\n") ]
             #[doc = " \n" ]
-            #[doc = concat!(" assert_eq!(status, Status::const_new(Some(", stringify!($phrase), ".to_string()), None, Some(", stringify!($num), "), None, None));\n") ]
+            #[doc = concat!(" assert_eq!(status, Status::const_new(Some(", stringify!($phrase), ".to_string()), None, Some(", stringify!($num.into()), "), None, None));\n") ]
             #[doc = " ``` "]
             #[allow(non_snake_case)]
              pub fn $konst(msg: Option<String>) -> Self {
                 Self::const_new(
                     msg.or_else(|| Some($phrase.to_string())),
                     None,
-                    Some($num),
+                    Some(StatusCode::from($num)),
                     None,
                     None
                 )
@@ -498,7 +498,7 @@ pub mod test {
     #[test]
     pub fn test_headers() {
         let uuid = uuid::Uuid::new_v4();
-        let mut status = Status::new(None, None, None, Some(uuid), None);
+        let mut status = Status::new(None, None, None as Option<u16>, Some(uuid), None);
 
         assert_eq!(status.headers(), &None);
     }

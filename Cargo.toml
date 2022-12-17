@@ -1,6 +1,6 @@
 [package]
 name = "hateoas"
-version = "2.0.0-alpha.1"
+version = "2.0.0-alpha.2"
 edition = "2021"
 authors = ["Anders Blenstrup-Pedersen <abp-git@ryuu.technology>"]
 description = "HATEOAS implementation for handling structured responses/request"
@@ -36,3 +36,5 @@ tracing = "0.1.37"
 
 [dev-dependencies]
 serde_json = "1.0.83"
+tokio = "1.23.0"
+tower = "0.4.13"

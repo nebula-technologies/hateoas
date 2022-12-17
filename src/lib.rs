@@ -27,6 +27,7 @@ mod metadata;
 mod rel;
 mod resource_trait;
 mod status;
+pub mod status_code;
 
 pub use crate::hateoas::Hateoas;
 pub use content::Content;
@@ -37,3 +38,4 @@ pub use rel::rel_link::RelLink;
 pub use rel::rel_link_collection::RelLinkCollection;
 pub use resource_trait::{AsHateoasResponse, HateoasResource, ToHateoasResponse};
 pub use status::Status;
+pub use status_code::StatusCode;

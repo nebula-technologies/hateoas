@@ -3,8 +3,8 @@ use crate::serde::Serialize;
 use crate::{Content, Metadata, Status};
 use serde::Deserialize;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct Hateoas<T: HateoasResource> {
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct Hateoas<T: HateoasResource + Clone> {
     #[serde(rename = "apiVersion")]
     api_version: String,
     kind: String,
@@ -13,7 +13,7 @@ pub struct Hateoas<T: HateoasResource> {
     status: Option<Status>,
 }
 
-impl<T: HateoasResource> Hateoas<T> {
+impl<T: HateoasResource + Clone> Hateoas<T> {
     /// ## New Hateoas.
     /// this will create a new instance of Hateoas that will make it easier to crate API replyes for services.
     ///
@@ -162,13 +162,13 @@ impl<T: HateoasResource> Hateoas<T> {
     }
 }
 
-impl<T: HateoasResource> From<T> for Hateoas<T> {
+impl<T: HateoasResource + Clone> From<T> for Hateoas<T> {
     fn from(t: T) -> Self {
         Hateoas::OK(Some(t), None)
     }
 }
 
-impl<T: HateoasResource> Default for Hateoas<T> {
+impl<T: HateoasResource + Clone> Default for Hateoas<T> {
     fn default() -> Self {
         Self {
             api_version: format!("{}/{}", T::GROUP, T::VERSION),
@@ -187,7 +187,7 @@ macro_rules! automated_code_hateoas {
             ($num:expr, $konst:ident, $phrase:expr);
         )+
     ) => {
-        impl<T: HateoasResource> Hateoas<T> {
+        impl<T: HateoasResource+Clone> Hateoas<T> {
         $(
             $(#[$docs])*
             #[doc = " ```\n" ]
@@ -394,7 +394,7 @@ automated_code_hateoas! {
 mod test {
     use crate::{Content, Hateoas, HateoasResource, RelLinkCollection};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Clone)]
     pub struct RubberBullet {
         pub name: String,
         pub title: String,

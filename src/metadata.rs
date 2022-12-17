@@ -2,7 +2,7 @@ use crate::header::HeaderMap;
 use std::collections::HashMap;
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, PartialEq, Debug, Default)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Default, Clone)]
 pub struct Metadata {
     pub(crate) id: Option<String>,
     pub(crate) name: Option<String>,

@@ -27,7 +27,9 @@ impl<T: DeserializeOwned, O: PayloadControl> PayloadFuture<O, T> {
     }
 }
 
-impl<T: DeserializeOwned + HateoasResource, O: PayloadControl> Future for PayloadFuture<O, T> {
+impl<T: DeserializeOwned + HateoasResource + Clone, O: PayloadControl> Future
+    for PayloadFuture<O, T>
+{
     type Output = Result<Hateoas<T>, ActixError>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
