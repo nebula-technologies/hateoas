@@ -1,8 +1,12 @@
+use crate::header::HeaderMap;
+use crate::http_method::HttpMethod;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RelLink {
     pub(crate) href: String,
     pub(crate) rel: String,
     pub(crate) method: HttpMethod,
+    pub(crate) headers: HeaderMap,
 }
 
 impl RelLink {
@@ -11,16 +15,17 @@ impl RelLink {
     /// ```
     /// use hateoas::{HttpMethod, RelLink};
     ///
-    /// let rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get);
-    /// let validate = ("somewhere_obj", "/somewhere/", HttpMethod::Get).into();
+    /// let rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get, None);
+    /// let validate = ("somewhere_obj", "/somewhere/", HttpMethod::Get, None).into();
     ///
     /// assert_eq!(rel, validate);
     /// ```
-    pub fn new(rel: &str, href: &str, method: HttpMethod) -> Self {
+    pub fn new<H: Into<HeaderMap>>(rel: &str, href: &str, method: HttpMethod, headers: H) -> Self {
         RelLink {
             href: href.to_string(),
             rel: rel.to_string(),
             method,
+            headers: headers.into(),
         }
     }
 
@@ -29,7 +34,7 @@ impl RelLink {
     /// ```
     /// use hateoas::{HttpMethod, RelLink};
     ///
-    /// let rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get);
+    /// let rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get, None);
     ///
     /// assert_eq!(rel.href(), "/somewhere/");
     /// ```
@@ -42,7 +47,7 @@ impl RelLink {
     /// ```
     /// use hateoas::{HttpMethod, RelLink};
     ///
-    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get);
+    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get, None);
     ///
     /// *(rel.href_mut()) = "/somewhere_else/".to_string();
     ///
@@ -57,7 +62,7 @@ impl RelLink {
     /// ```
     /// use hateoas::{HttpMethod, RelLink};
     ///
-    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get);
+    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get, None);
     ///    ///
     /// assert_eq!(rel.rel(), "somewhere_obj");
     /// ```
@@ -70,7 +75,7 @@ impl RelLink {
     /// ```
     /// use hateoas::{HttpMethod, RelLink};
     ///
-    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get);
+    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get, None);
     ///
     /// *(rel.rel_mut()) =  "somewhere_obj_2".to_string();
     ///
@@ -85,7 +90,7 @@ impl RelLink {
     /// ```
     /// use hateoas::{HttpMethod, RelLink};
     ///
-    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get);    ///
+    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get, None);    ///
     ///
     /// assert_eq!(rel.method(), &HttpMethod::Get);
     /// ```
@@ -98,7 +103,7 @@ impl RelLink {
     /// ```
     /// use hateoas::{HttpMethod, RelLink};
     ///
-    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get);
+    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get, None);
     ///
     /// *(rel.method_mut()) = HttpMethod::Connect;
     ///
@@ -107,31 +112,70 @@ impl RelLink {
     pub fn method_mut(&mut self) -> &mut HttpMethod {
         &mut self.method
     }
+
+    /// ## Getter for headers
+    ///
+    /// ```
+    /// use hateoas::{HttpMethod, RelLink};
+    ///
+    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get, ("Content-Type", "application/json"));    ///
+    ///
+    /// assert_eq!(rel.method(), &HttpMethod::Get);
+    /// ```
+    pub fn headers(&self) -> &HeaderMap {
+        &self.headers
+    }
+
+    /// ## Getter/Setter for headers
+    ///
+    /// ```
+    /// use hateoas::{HttpMethod, RelLink};
+    ///
+    /// let mut rel = RelLink::new( "somewhere_obj","/somewhere/", HttpMethod::Get, None);
+    ///
+    /// rel.headers_mut().append("Content-Type", "application/json");
+    ///
+    /// assert!(rel.headers().contains_key("Content-Type"));
+    /// ```
+    pub fn headers_mut(&mut self) -> &mut HeaderMap {
+        &mut self.headers
+    }
 }
 
 impl From<(String, String, HttpMethod)> for RelLink {
     fn from(r: (String, String, HttpMethod)) -> Self {
-        Self::new(&r.0, &r.1, r.2)
+        Self::new(&r.0, &r.1, r.2, None)
     }
 }
 
 impl From<(&str, &str, HttpMethod)> for RelLink {
     fn from(r: (&str, &str, HttpMethod)) -> Self {
-        Self::new(r.0, r.1, r.2)
+        Self::new(r.0, r.1, r.2, None)
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum HttpMethod {
-    Get,
-    Head,
-    Post,
-    Put,
-    Delete,
-    Connect,
-    Options,
-    Trace,
-    Patch,
+impl From<(&str, &str, HttpMethod, (&str, &str))> for RelLink {
+    fn from(r: (&str, &str, HttpMethod, (&str, &str))) -> Self {
+        Self::new(r.0, r.1, r.2, HeaderMap::from(r.3))
+    }
+}
+
+impl From<(&str, &str, HttpMethod, Vec<(&str, &str)>)> for RelLink {
+    fn from(r: (&str, &str, HttpMethod, Vec<(&str, &str)>)) -> Self {
+        Self::new(r.0, r.1, r.2, HeaderMap::from(r.3))
+    }
+}
+
+impl From<(&str, &str, HttpMethod, HeaderMap)> for RelLink {
+    fn from(r: (&str, &str, HttpMethod, HeaderMap)) -> Self {
+        Self::new(r.0, r.1, r.2, HeaderMap::from(r.3))
+    }
+}
+
+impl From<(&str, &str, HttpMethod, Option<()>)> for RelLink {
+    fn from(r: (&str, &str, HttpMethod, Option<()>)) -> Self {
+        Self::new(r.0, r.1, r.2, HeaderMap::from(r.3))
+    }
 }
 
 macro_rules! relational_links {
@@ -149,7 +193,7 @@ macro_rules! relational_links {
             #[doc = " \n" ]
             #[doc = concat!(" let rel = RelLink::", stringify!($function), "(\"object\", \"/path/to/objects\");\n") ]
             #[doc = " \n" ]
-            #[doc = concat!(" assert_eq!(rel, RelLink::new(\"object\", \"/path/to/objects\", HttpMethod::", stringify!($konst), "));\n") ]
+            #[doc = concat!(" assert_eq!(rel, RelLink::new(\"object\", \"/path/to/objects\", HttpMethod::", stringify!($konst), ", None));\n") ]
             #[doc = " ``` "]
             #[allow(non_snake_case)]
             pub fn $function(rel: &str, href: &str) -> RelLink {
@@ -157,6 +201,7 @@ macro_rules! relational_links {
                     href: format!("{}",href),
                     rel: format!("{}",rel),
                     method: HttpMethod::$konst,
+                    headers: HeaderMap::default()
                 }
             }
         )+

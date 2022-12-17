@@ -1,20 +1,19 @@
 use crate::resource_trait::HateoasResource;
 use crate::serde::Serialize;
 use crate::{Content, Metadata, Status};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct Hateoas<T: Serialize + HateoasResource> {
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct Hateoas<T: HateoasResource + Clone> {
     #[serde(rename = "apiVersion")]
-    pub api_version: String,
-    pub kind: String,
-    pub metadata: Option<Metadata>,
-    pub spec: Option<Content<T>>,
-    pub status: Option<Status>,
+    api_version: String,
+    kind: String,
+    metadata: Option<Metadata>,
+    spec: Option<Content<T>>,
+    status: Option<Status>,
 }
 
-impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
+impl<T: HateoasResource + Clone> Hateoas<T> {
     /// ## New Hateoas.
     /// this will create a new instance of Hateoas that will make it easier to crate API replyes for services.
     ///
@@ -24,11 +23,11 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
     /// assert_eq!(new_hateoas_response, Hateoas::default() as Hateoas<String>);
-    /// assert_eq!(new_hateoas_response.spec(), &None);
-    /// assert_eq!(new_hateoas_response.status(), &None);
-    /// assert_eq!(new_hateoas_response.metadata(), &None);
-    /// assert_eq!(new_hateoas_response.kind(), &"String".to_string());
-    /// assert_eq!(new_hateoas_response.api_version(), &"hateoas.io/0.0.1");
+    /// assert_eq!(None, new_hateoas_response.spec());
+    /// assert_eq!(None, new_hateoas_response.status());
+    /// assert_eq!(None, new_hateoas_response.metadata());
+    /// assert_eq!(&"String".to_string(), new_hateoas_response.kind());
+    /// assert_eq!(&"hateoas.io/0.0.1".to_string(), new_hateoas_response.api_version());
     /// ```
     pub fn new(
         spec: Option<Content<T>>,
@@ -51,7 +50,7 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     ///
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
-    /// assert_eq!(new_hateoas_response.kind(), &"String".to_string());
+    /// assert_eq!(&"String".to_string(), new_hateoas_response.kind());
     /// ```
     pub fn kind(&self) -> &String {
         &self.kind
@@ -65,7 +64,7 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     ///
     /// let new_hateoas_response: Hateoas<String> = Hateoas::new(None, None, None);
     ///
-    /// assert_eq!(new_hateoas_response.api_version(), &"hateoas.io/0.0.1");
+    /// assert_eq!(&"hateoas.io/0.0.1".to_string(), new_hateoas_response.api_version());
     /// ```
     pub fn api_version(&self) -> &String {
         &self.api_version
@@ -81,10 +80,10 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// let hateoas: Hateoas<()> = Hateoas::default();
     /// let metadata = hateoas.metadata();
     ///
-    /// assert_eq!(metadata, &None)
+    /// assert_eq!(None, metadata)
     /// ```
-    pub fn metadata(&self) -> &Option<Metadata> {
-        &self.metadata
+    pub fn metadata(&self) -> Option<&Metadata> {
+        self.metadata.as_ref()
     }
     /// Getting the metadata from the response.
     /// By default metadata is not initialized and will be initialized upon usage.
@@ -97,7 +96,7 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// assert_eq!(&mut metadata, response.metadata_mut());
     /// ```
     pub fn metadata_mut(&mut self) -> &mut Metadata {
-        self.metadata.get_or_insert_with(Metadata::default)
+        self.metadata.get_or_insert(Metadata::default())
     }
 
     /// ## Getter for the status property
@@ -110,10 +109,10 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// let hateoas: Hateoas<()> = Hateoas::default();
     /// let status = hateoas.status();
     ///
-    /// assert_eq!(status, &None)
+    /// assert_eq!(None, status)
     /// ```
-    pub fn status(&self) -> &Option<Status> {
-        &self.status
+    pub fn status(&self) -> Option<&Status> {
+        self.status.as_ref()
     }
     /// Get The status information from the response,
     /// If this is not initialized it will be initialized and returned.
@@ -126,7 +125,7 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// assert_eq!(&mut Status::default(), status)
     /// ```
     pub fn status_mut(&mut self) -> &mut Status {
-        self.status.get_or_insert_with(Status::default)
+        self.status.get_or_insert(Status::default())
     }
 
     /// ## Getter for the spec property
@@ -139,16 +138,17 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// let hateoas: Hateoas<()> = Hateoas::default();
     /// let spec = hateoas.spec();
     ///
-    /// assert_eq!(spec, &None)
+    /// assert_eq!(None, spec)
     /// ```
-    pub fn spec(&self) -> &Option<Content<T>> {
-        &self.spec
+    pub fn spec(&self) -> Option<&Content<T>> {
+        self.spec.as_ref()
     }
 
     /// Get the spec information form the Response payload
     ///
     /// ```
     /// use hateoas::{Content, Hateoas};
+    ///
     /// let mut response: Hateoas<String> = Hateoas::default();
     ///
     /// // Here spec will be None at initialization time.
@@ -158,13 +158,19 @@ impl<T: Serialize + Default + HateoasResource> Hateoas<T> {
     /// assert_eq!(&mut Content::default(), spec)
     /// ```
     pub fn spec_mut(&mut self) -> &mut Content<T> {
-        self.spec.get_or_insert_with(Content::default)
+        self.spec.get_or_insert(Content::default())
     }
 }
 
-impl<T: Serialize + HateoasResource> Default for Hateoas<T> {
+impl<T: HateoasResource + Clone> From<T> for Hateoas<T> {
+    fn from(t: T) -> Self {
+        Hateoas::OK(Some(t), None)
+    }
+}
+
+impl<T: HateoasResource + Clone> Default for Hateoas<T> {
     fn default() -> Self {
-        Hateoas {
+        Self {
             api_version: format!("{}/{}", T::GROUP, T::VERSION),
             kind: format!("{}", T::KIND),
             metadata: None,
@@ -181,19 +187,19 @@ macro_rules! automated_code_hateoas {
             ($num:expr, $konst:ident, $phrase:expr);
         )+
     ) => {
-        impl<T: Serialize + HateoasResource + Default> Hateoas<T> {
+        impl<T: HateoasResource+Clone> Hateoas<T> {
         $(
             $(#[$docs])*
             #[doc = " ```\n" ]
             #[doc = " use hateoas::{Hateoas,Content,Status};\n"]
             #[doc = " \n" ]
-            #[doc = concat!(" let hateoas: Hateoas<String> = Hateoas::", stringify!($konst), "(Some(", stringify!($phrase), ".to_string()));\n") ]
+            #[doc = concat!(" let hateoas: Hateoas<String> = Hateoas::", stringify!($konst), "(Some(", stringify!($phrase), ".to_string()), None);\n") ]
             #[doc = " \n" ]
-            #[doc = concat!(" assert_eq!(hateoas, Hateoas::new(Some(Content::new(", stringify!($phrase), ".to_string())), None, Some(Status::", stringify!($konst), "())));\n") ]
+            #[doc = concat!(" assert_eq!(hateoas, Hateoas::new(Some(Content::new(", stringify!($phrase), ".to_string())), None, Some(Status::", stringify!($konst), "(None))));\n") ]
             #[doc = " ``` "]
             #[allow(non_snake_case)]
-            pub fn $konst(data: Option<T>) -> Self {
-                Self::new(data.map(|t| Content::new(t)), None, Some(Status::$konst()))
+            pub fn $konst(data: Option<T>, msg: Option<String>) -> Self {
+                Self::new(data.map(|t| Content::new(t)), None, Some(Status::$konst(msg)))
             }
 
         )+
@@ -211,7 +217,6 @@ automated_code_hateoas! {
     /// 102 Processing
     /// [[RFC2518](https://tools.ietf.org/html/rfc2518)]
     (102, PROCESSING, "Processing");
-
     /// 200 OK
     /// [[RFC7231, Section 6.3.1](https://tools.ietf.org/html/rfc7231#section-6.3.1)]
     (200, OK, "OK");
@@ -239,11 +244,9 @@ automated_code_hateoas! {
     /// 208 Already Reported
     /// [[RFC5842](https://tools.ietf.org/html/rfc5842)]
     (208, ALREADY_REPORTED, "Already Reported");
-
     /// 226 IM Used
     /// [[RFC3229](https://tools.ietf.org/html/rfc3229)]
     (226, IM_USED, "IM Used");
-
     /// 300 Multiple Choices
     /// [[RFC7231, Section 6.4.1](https://tools.ietf.org/html/rfc7231#section-6.4.1)]
     (300, MULTIPLE_CHOICES, "Multiple Choices");
@@ -268,7 +271,6 @@ automated_code_hateoas! {
     /// 308 Permanent Redirect
     /// [[RFC7238](https://tools.ietf.org/html/rfc7238)]
     (308, PERMANENT_REDIRECT, "Permanent Redirect");
-
     /// 400 Bad Request
     /// [[RFC7231, Section 6.5.1](https://tools.ietf.org/html/rfc7231#section-6.5.1)]
     (400, BAD_REQUEST, "Bad Request");
@@ -326,7 +328,6 @@ automated_code_hateoas! {
     /// 418 I'm a teapot
     /// [curiously not registered by IANA but [RFC2324](https://tools.ietf.org/html/rfc2324)]
     (418, IM_A_TEAPOT, "I'm a teapot");
-
     /// 421 Misdirected Request
     /// [RFC7540, Section 9.1.2](http://tools.ietf.org/html/rfc7540#section-9.1.2)
     (421, MISDIRECTED_REQUEST, "Misdirected Request");
@@ -339,26 +340,21 @@ automated_code_hateoas! {
     /// 424 Failed Dependency
     /// [[RFC4918](https://tools.ietf.org/html/rfc4918)]
     (424, FAILED_DEPENDENCY, "Failed Dependency");
-
     /// 426 Upgrade Required
     /// [[RFC7231, Section 6.5.15](https://tools.ietf.org/html/rfc7231#section-6.5.15)]
     (426, UPGRADE_REQUIRED, "Upgrade Required");
-
     /// 428 Precondition Required
     /// [[RFC6585](https://tools.ietf.org/html/rfc6585)]
     (428, PRECONDITION_REQUIRED, "Precondition Required");
     /// 429 Too Many Requests
     /// [[RFC6585](https://tools.ietf.org/html/rfc6585)]
     (429, TOO_MANY_REQUESTS, "Too Many Requests");
-
     /// 431 Request Header Fields Too Large
     /// [[RFC6585](https://tools.ietf.org/html/rfc6585)]
     (431, REQUEST_HEADER_FIELDS_TOO_LARGE, "Request Header Fields Too Large");
-
     /// 451 Unavailable For Legal Reasons
     /// [[RFC7725](http://tools.ietf.org/html/rfc7725)]
     (451, UNAVAILABLE_FOR_LEGAL_REASONS, "Unavailable For Legal Reasons");
-
     /// 500 Internal Server Error
     /// [[RFC7231, Section 6.6.1](https://tools.ietf.org/html/rfc7231#section-6.6.1)]
     (500, INTERNAL_SERVER_ERROR, "Internal Server Error");
@@ -386,11 +382,112 @@ automated_code_hateoas! {
     /// 508 Loop Detected
     /// [[RFC5842](https://tools.ietf.org/html/rfc5842)]
     (508, LOOP_DETECTED, "Loop Detected");
-
     /// 510 Not Extended
     /// [[RFC2774](https://tools.ietf.org/html/rfc2774)]
     (510, NOT_EXTENDED, "Not Extended");
     /// 511 Network Authentication Required
     /// [[RFC6585](https://tools.ietf.org/html/rfc6585)]
     (511, NETWORK_AUTHENTICATION_REQUIRED, "Network Authentication Required");
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{Content, Hateoas, HateoasResource, RelLinkCollection};
+
+    #[derive(Serialize, Deserialize, Clone)]
+    pub struct RubberBullet {
+        pub name: String,
+        pub title: String,
+        pub chapter: String,
+    }
+
+    impl Default for RubberBullet {
+        fn default() -> Self {
+            RubberBullet {
+                name: "Rubber Bullet".to_string(),
+                title: "The Bullet".to_string(),
+                chapter: "A Rubber Bullet Hurts".to_string(),
+            }
+        }
+    }
+
+    impl HateoasResource for RubberBullet {
+        const KIND: &'static str = "";
+        const VERSION: &'static str = "";
+        const GROUP: &'static str = "";
+        const URL_PATH_SEGMENT: &'static str = "";
+    }
+
+    const RUBBER_BULLET_SER: &str = r#"{
+      "apiVersion": "/",
+      "kind": "",
+      "metadata": null,
+      "spec": {
+        "content": {
+          "name": "Rubber Bullet",
+          "title": "The Bullet",
+          "chapter": "A Rubber Bullet Hurts"
+        },
+        "rel": null
+      },
+      "status": {
+        "message": "OK",
+        "code": null,
+        "http_status_code": 200,
+        "session": null
+      }
+    }"#;
+    #[test]
+    pub fn confirm_some_code() {}
+
+    #[test]
+    pub fn serialize_test() {
+        let rubber_bullet = RubberBullet {
+            name: "Rubber Bullet".to_string(),
+            title: "The Bullet".to_string(),
+            chapter: "A Rubber Bullet Hurts".to_string(),
+        };
+
+        let response = Hateoas::OK(Some(rubber_bullet), None);
+
+        let response_ser: serde_json::Value = serde_json::to_value(&response).unwrap();
+
+        println!("{:#?}", response_ser);
+    }
+    #[test]
+    pub fn deserialize_test() {
+        let response_ser: serde_json::Value = serde_json::from_str(RUBBER_BULLET_SER).unwrap();
+
+        println!("{:#?}", response_ser);
+    }
+
+    // #[test]
+    // fn default_response_test() {
+    //     let response: Response<String> = Response {
+    //         content: None,
+    //         metadata: Default::default(),
+    //     };
+    //     let response_ser = response.encode("yaml");
+    //
+    //     // println!("{}", response_ser);
+    //     // assert_eq!()
+    // }
+
+    #[test]
+    fn test_content_rel() {
+        let mut content: Content<()> = Content::default();
+        let rel = content.rel();
+        assert_eq!(&mut RelLinkCollection::default(), rel);
+    }
+
+    #[test]
+    fn test_get_spec_on_none() {
+        let mut response: Hateoas<String> = Hateoas::default();
+
+        // Here spec will be None at initialization time.
+        // at [Response.spec()] Spec will be initialized and returned.
+
+        let mut spec = response.spec_mut();
+        assert_eq!(&mut Content::default(), spec)
+    }
 }
