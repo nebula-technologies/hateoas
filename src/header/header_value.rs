@@ -9,7 +9,7 @@ use std::ops::{Deref, DerefMut};
 use std::str::{from_utf8, Utf8Error};
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct HeaderValue(HashSet<Bytes>);
+pub struct HeaderValue(HashSet<String>);
 
 impl HeaderValue {
     pub fn new<'a, B: Into<HeaderValue>>() -> Self {
@@ -22,11 +22,12 @@ impl HeaderValue {
         }
     }
 
-    pub fn to_vec(&self) -> Vec<u8> {
-        self.iter()
-            .map(|t| t.to_vec())
-            .flatten()
-            .collect::<Vec<u8>>()
+    pub fn to_vec(&self) -> Vec<String> {
+        self.iter().map(|t| t.clone()).collect::<Vec<String>>()
+    }
+
+    pub fn as_vec_u8(&self) -> Vec<u8> {
+        self.to_vec().join("").as_bytes().to_vec()
     }
 }
 
@@ -110,7 +111,7 @@ impl From<Vec<String>> for HeaderValue {
     fn from(t: Vec<String>) -> Self {
         let mut set = HashSet::new();
         for i in t {
-            set.insert(Bytes::from(i));
+            set.insert(i);
         }
         Self(set)
     }
@@ -119,7 +120,7 @@ impl From<Vec<&str>> for HeaderValue {
     fn from(t: Vec<&str>) -> Self {
         let mut set = HashSet::new();
         for i in t {
-            set.insert(Bytes::from(i.as_bytes().to_vec()));
+            set.insert(i.to_string());
         }
         Self(set)
     }
@@ -128,7 +129,7 @@ impl From<Vec<&str>> for HeaderValue {
 impl From<&str> for HeaderValue {
     fn from(s: &str) -> Self {
         let mut set = HashSet::new();
-        set.insert(Bytes::from(s.as_bytes().to_vec()));
+        set.insert(s.to_string());
         Self(set)
     }
 }
@@ -156,7 +157,7 @@ impl TryFrom<&HeaderValue> for Vec<String> {
 impl From<http::HeaderValue> for HeaderValue {
     fn from(t: http::HeaderValue) -> Self {
         let mut values = HeaderValue::default();
-        values.insert(Bytes::from(t.as_bytes().to_vec()));
+        values.insert(String::from_utf8(Vec::from(t.as_bytes())).unwrap_or("".to_string()));
         values
     }
 }
@@ -164,13 +165,13 @@ impl From<http::HeaderValue> for HeaderValue {
 impl From<&http::HeaderValue> for HeaderValue {
     fn from(t: &http::HeaderValue) -> Self {
         let mut values = HeaderValue::default();
-        values.insert(Bytes::from(t.as_bytes().to_vec()));
+        values.insert(String::from_utf8(Vec::from(t.as_bytes())).unwrap_or("".to_string()));
         values
     }
 }
 
 impl Deref for HeaderValue {
-    type Target = HashSet<Bytes>;
+    type Target = HashSet<String>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -185,18 +186,13 @@ impl DerefMut for HeaderValue {
 
 impl ToString for HeaderValue {
     fn to_string(&self) -> String {
-        self.0
-            .iter()
-            .map(|t| String::from_utf8(t.to_vec()).ok())
-            .collect::<Option<Vec<String>>>()
-            .map(|t| t.join(""))
-            .unwrap_or("".to_string())
+        self.0.iter().cloned().collect::<Vec<String>>().join("")
     }
 }
 
 impl TryFrom<&HeaderValue> for http::HeaderValue {
     type Error = String;
     fn try_from(t: &HeaderValue) -> Result<Self, Self::Error> {
-        Self::from_bytes(t.to_vec().as_slice()).map_err(|e| e.to_string())
+        Self::from_bytes(t.as_vec_u8().as_slice()).map_err(|e| e.to_string())
     }
 }

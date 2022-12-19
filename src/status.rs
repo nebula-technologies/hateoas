@@ -43,6 +43,8 @@ impl Status {
         }
     }
 
+    pub fn merge(&mut self, other: Option<&Self>) {}
+
     /// ## Getting Message
     /// This is for getting the message field from the status object.
     ///

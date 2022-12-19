@@ -1,3 +1,4 @@
+use crate::header::HeaderKey;
 use crate::resource_trait::HateoasResource;
 use crate::serde::Serialize;
 use crate::{Content, Metadata, Status};
