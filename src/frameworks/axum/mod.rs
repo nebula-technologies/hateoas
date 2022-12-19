@@ -73,7 +73,7 @@ where
     type Rejection = Hateoas<()>;
 
     async fn from_request(mut req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
-        span!(Level::Trace, "Extracting Hateoas object from request");
+        span!(Level::TRACE, "Extracting Hateoas object from request");
         let headers = HeaderMap::from(req.headers());
         req.extensions_mut().insert(headers.clone());
         let content_type = headers
