@@ -90,6 +90,10 @@ impl HeaderMap {
         }
         inv_extract_headers
     }
+
+    pub fn contains_key<K: Into<HeaderKey>>(&self, key: K) -> bool {
+        self.0.contains_key(&key.into())
+    }
 }
 
 impl Default for HeaderMap {
