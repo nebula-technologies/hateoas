@@ -1,4 +1,4 @@
-use crate::header::{HeaderValue, COMMON_HEADERS};
+use crate::header::{HeaderKey, HeaderValue, COMMON_HEADERS};
 use bytes::Bytes;
 use http::header::{HeaderName, IntoHeaderName};
 use std::borrow::Borrow;
@@ -8,7 +8,7 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct HeaderMap(HashMap<String, HeaderValue>);
+pub struct HeaderMap(HashMap<HeaderKey, HeaderValue>);
 
 impl HeaderMap {
     pub fn new() -> Self {
@@ -26,7 +26,7 @@ impl HeaderMap {
     /// assert_eq!(HeaderMap::from(("Content-Type", "application/json")), map);
     /// ```
     pub fn set<V: Into<HeaderValue>>(&mut self, key: &str, value: V) -> &Self {
-        self.0.insert(key.to_string(), value.into());
+        self.0.insert(key.into(), value.into());
         self
     }
 
@@ -44,17 +44,19 @@ impl HeaderMap {
     /// assert_eq!(HeaderMap::from(("Content-Type", vec!["application/json","application/x-yaml"])), map);
     /// ```
     pub fn append<'a, V: Into<HeaderValue>>(&mut self, key: &str, value: V) -> &Self {
-        if let Some(values) = self.0.get_mut(key) {
+        // Shadow variable of key.
+        let key: HeaderKey = key.into();
+        if let Some(values) = self.0.get_mut(&key) {
             values.append(value);
         } else {
-            self.0.insert(key.to_string(), value.into());
+            self.0.insert(key, value.into());
         }
         self
     }
 
-    pub fn get_first<Q: ?Sized>(&self, key: &Q) -> Option<&Bytes>
+    pub fn get_first<Q: ?Sized>(&self, key: &Q) -> Option<&String>
     where
-        String: Borrow<Q>,
+        HeaderKey: Borrow<Q>,
         Q: Hash + Eq,
     {
         self.0.get(key).and_then(|v| v.iter().next())
@@ -72,8 +74,8 @@ impl HeaderMap {
         let converted_extract = extract.into();
         let mut extract_headers = HeaderMap::new();
         for (key, value) in &self.0 {
-            if converted_extract.contains(key.as_str()) {
-                extract_headers.append(key, value.clone());
+            if converted_extract.contains(&key.to_string()) {
+                extract_headers.append(&key.to_string(), value.clone());
             }
         }
         extract_headers
@@ -82,8 +84,8 @@ impl HeaderMap {
         let converted_extract = extract.into();
         let mut inv_extract_headers = HeaderMap::new();
         for (key, value) in &self.0 {
-            if !converted_extract.contains(key.as_str()) {
-                inv_extract_headers.append(key, value.clone());
+            if !converted_extract.contains(&key.to_string()) {
+                inv_extract_headers.append(&key.to_string(), value.clone());
             }
         }
         inv_extract_headers
@@ -97,7 +99,7 @@ impl Default for HeaderMap {
 }
 
 impl Deref for HeaderMap {
-    type Target = HashMap<String, HeaderValue>;
+    type Target = HashMap<HeaderKey, HeaderValue>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -170,7 +172,7 @@ impl From<http::HeaderMap> for HeaderMap {
         let mut headers = Self::default();
         for (opt_key, value) in t {
             if let Some(key) = opt_key {
-                headers.insert(key.to_string(), value.into());
+                headers.insert(key.as_str().into(), value.into());
             }
         }
         headers
@@ -181,7 +183,7 @@ impl From<&http::HeaderMap> for HeaderMap {
     fn from(t: &http::HeaderMap) -> Self {
         let mut headers = Self::default();
         for (key, value) in t {
-            headers.insert(key.to_string(), value.into());
+            headers.insert(key.as_str().into(), value.into());
         }
         headers
     }
@@ -193,7 +195,7 @@ impl TryFrom<HeaderMap> for http::HeaderMap {
         let mut headers = Self::default();
         for (key, value) in h.0 {
             let header_value_res = http::HeaderValue::try_from(&value);
-            let name_res = HeaderName::from_str(key.as_str());
+            let name_res = HeaderName::from_str(key.to_string().as_str());
             match (header_value_res, name_res) {
                 (Ok(v), Ok(n)) => {
                     headers.append(n, v);

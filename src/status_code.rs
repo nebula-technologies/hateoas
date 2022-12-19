@@ -1,4 +1,8 @@
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+use std::fmt;
+use std::fmt::Formatter;
+use std::marker::PhantomData;
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum StatusCode {
     /// 100 Continue
     /// [[RFC7231, Section 6.2.1](https://tools.ietf.org/html/rfc7231#section-6.2.1)]
@@ -186,6 +190,11 @@ pub enum StatusCode {
 
 impl From<u16> for StatusCode {
     fn from(t: u16) -> Self {
+        Self::from(&t)
+    }
+}
+impl From<&u16> for StatusCode {
+    fn from(t: &u16) -> Self {
         match t {
             100 => Self::Continue,
             101 => Self::SwitchingProtocols,
@@ -247,7 +256,80 @@ impl From<u16> for StatusCode {
             508 => Self::LoopDetected,
             510 => Self::NotExtended,
             511 => Self::NetworkAuthenticationRequired,
-            _ => Self::Custom(t),
+            _ => Self::Custom(*t),
+        }
+    }
+}
+
+impl From<StatusCode> for u16 {
+    fn from(t: StatusCode) -> Self {
+        Self::from(&t)
+    }
+}
+impl From<&StatusCode> for u16 {
+    fn from(t: &StatusCode) -> Self {
+        match t {
+            StatusCode::Continue => 100,
+            StatusCode::SwitchingProtocols => 101,
+            StatusCode::Processing => 102,
+            StatusCode::OK => 200,
+            StatusCode::Created => 201,
+            StatusCode::Accepted => 202,
+            StatusCode::NonAuthoritativeInformation => 203,
+            StatusCode::NoContent => 204,
+            StatusCode::ResetContent => 205,
+            StatusCode::PartialContent => 206,
+            StatusCode::MultiStatus => 207,
+            StatusCode::AlreadyReported => 208,
+            StatusCode::IMUsed => 226,
+            StatusCode::MultipleChoices => 300,
+            StatusCode::MovedPermanently => 301,
+            StatusCode::Found => 302,
+            StatusCode::SeeOther => 303,
+            StatusCode::NotModified => 304,
+            StatusCode::UseProxy => 305,
+            StatusCode::TemporaryRedirect => 307,
+            StatusCode::PermanentRedirect => 308,
+            StatusCode::BadRequest => 400,
+            StatusCode::Unauthorized => 401,
+            StatusCode::PaymentRequired => 402,
+            StatusCode::Forbidden => 403,
+            StatusCode::NotFound => 404,
+            StatusCode::MethodNotAllowed => 405,
+            StatusCode::NotAcceptable => 406,
+            StatusCode::ProxyAuthenticationRequired => 407,
+            StatusCode::RequestTimeout => 408,
+            StatusCode::Conflict => 409,
+            StatusCode::Gone => 410,
+            StatusCode::LengthRequired => 411,
+            StatusCode::PreconditionFailed => 412,
+            StatusCode::PayloadTooLarge => 413,
+            StatusCode::URITooLong => 414,
+            StatusCode::UnsupportedMediaType => 415,
+            StatusCode::RangeNotSatisfiable => 416,
+            StatusCode::ExpectationFailed => 417,
+            StatusCode::IAmATeapot => 418,
+            StatusCode::MisdirectedRequest => 421,
+            StatusCode::UnprocessableEntity => 422,
+            StatusCode::Locked => 423,
+            StatusCode::FailedDependency => 424,
+            StatusCode::UpgradeRequired => 426,
+            StatusCode::PreconditionRequired => 428,
+            StatusCode::TooManyRequests => 429,
+            StatusCode::RequestHeaderFieldsTooLarge => 431,
+            StatusCode::UnavailableForLegalReasons => 451,
+            StatusCode::InternalServerError => 500,
+            StatusCode::NotImplemented => 501,
+            StatusCode::BadGateway => 502,
+            StatusCode::ServiceUnavailable => 503,
+            StatusCode::GatewayTimeout => 504,
+            StatusCode::HTTPVersionNotSupported => 505,
+            StatusCode::VariantAlsoNegotiates => 506,
+            StatusCode::InsufficientStorage => 507,
+            StatusCode::LoopDetected => 508,
+            StatusCode::NotExtended => 510,
+            StatusCode::NetworkAuthenticationRequired => 511,
+            StatusCode::Custom(t) => *t,
         }
     }
 }
@@ -514,4 +596,76 @@ automated_status_code! {
     /// 511 Network Authentication Required
     /// [[RFC6585](https://tools.ietf.org/html/rfc6585)]
     (NETWORK_AUTHENTICATION_REQUIRED,NetworkAuthenticationRequired);
+}
+
+impl serde::Serialize for StatusCode {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_u16(u16::from(self))
+    }
+}
+
+pub struct U16New(u16);
+
+impl<'de> serde::Deserialize<'de> for StatusCode {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct Visitor<'de> {
+            marker: PhantomData<StatusCode>,
+            lifetime: PhantomData<&'de ()>,
+        }
+        impl<'de> serde::de::Visitor<'de> for Visitor<'de> {
+            type Value = StatusCode;
+            fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+                Formatter::write_str(formatter, "StatusCode within u16 spec")
+            }
+            #[inline]
+            fn visit_newtype_struct<E>(self, e: E) -> Result<Self::Value, E::Error>
+            where
+                E: serde::Deserializer<'de>,
+            {
+                let deserialize_field: u16 = match <u16 as serde::Deserialize>::deserialize(e) {
+                    Ok(val) => val,
+                    Err(err) => {
+                        return Err(err);
+                    }
+                };
+                Ok(StatusCode::from(deserialize_field))
+            }
+            #[inline]
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                let deserialize_field =
+                    match match serde::de::SeqAccess::next_element::<u16>(&mut seq) {
+                        Ok(val) => val,
+                        Err(err) => {
+                            return Err(err);
+                        }
+                    } {
+                        Some(value) => value,
+                        None => {
+                            return Err(serde::de::Error::invalid_length(
+                                0usize,
+                                &"StatusCode id within u16 spec",
+                            ));
+                        }
+                    };
+                Ok(StatusCode::from(deserialize_field))
+            }
+        }
+        serde::Deserializer::deserialize_newtype_struct(
+            deserializer,
+            "StatusCode",
+            Visitor {
+                marker: PhantomData::<StatusCode>,
+                lifetime: PhantomData,
+            },
+        )
+    }
 }
